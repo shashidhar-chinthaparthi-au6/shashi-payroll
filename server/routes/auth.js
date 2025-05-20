@@ -33,6 +33,19 @@ router.post('/register/client', async (req, res) => {
   }
 });
 
+// Register Employee
+router.post('/register/employee', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ name, email, password: hashedPassword, role: 'employee' });
+    await user.save();
+    responseHandler.success(res, null, 'Employee registered successfully', statusCodes.CREATED);
+  } catch (error) {
+    responseHandler.error(res, 'Email already registered', statusCodes.BAD_REQUEST);
+  }
+});
+
 // Login (handles all user types)
 router.post('/login', async (req, res) => {
   try {
@@ -56,7 +69,7 @@ router.post('/login', async (req, res) => {
         id: user._id,
         role: user.role 
       }, 
-      process.env.JWT_SECRET, 
+      process.env.JWT_SECRET || 'test-secret', 
       { expiresIn: '1h' }
     );
 

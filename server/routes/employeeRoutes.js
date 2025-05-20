@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Employee = require('../models/Employee');
 const Shop = require('../models/Shop');
+const User = require('../models/User');
+const bcrypt = require('bcrypt');
 const { verifyToken, checkRole } = require('../middleware/auth');
 const upload = require('../utils/multerConfig');
 
@@ -17,9 +19,34 @@ router.post('/', verifyToken, checkRole(['client']), async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
+    // Create employee record
     const employee = new Employee(req.body);
     await employee.save();
-    res.status(201).json(employee);
+
+    // Create user account with default password
+    const defaultPassword = 'Welcome@123'; // Default password
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    
+    const user = new User({
+      name: `${employee.firstName} ${employee.lastName}`,
+      email: employee.email,
+      password: hashedPassword,
+      role: 'employee'
+    });
+
+    await user.save();
+
+    // Return both employee and user data
+    res.status(201).json({
+      employee,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      },
+      defaultPassword // Include this only in the response, not stored
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

@@ -190,13 +190,25 @@ router.get('/employee/:employeeId', verifyToken, async (req, res) => {
   }
 });
 
-// Get attendance logs for a shop (admin only)
-router.get('/shop/:shopId', verifyToken, checkRole(['admin']), async (req, res) => {
+// Get attendance logs for a shop (admin or shop owner)
+router.get('/shop/:shopId', verifyToken, checkRole(['admin', 'client']), async (req, res) => {
   try {
     console.log('Shop attendance request:', {
       shopId: req.params.shopId,
-      userId: req.userId
+      userId: req.userId,
+      role: req.userRole
     });
+
+    // If client, verify shop ownership
+    if (req.userRole === 'client') {
+      const shop = await Shop.findById(req.params.shopId);
+      if (!shop) {
+        return res.status(404).json({ message: 'Shop not found' });
+      }
+      if (shop.owner.toString() !== req.userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
 
     const { startDate, endDate } = req.query;
     const query = { shop: req.params.shopId };
@@ -223,6 +235,35 @@ router.get('/shop/:shopId', verifyToken, checkRole(['admin']), async (req, res) 
   } catch (error) {
     console.error('Shop attendance error:', error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Get employee's attendance records
+router.get('/employee', verifyToken, checkRole(['employee']), async (req, res) => {
+  try {
+    const employeeId = req.userId;
+    console.log('Fetching attendance for employee:', employeeId);
+
+    const attendance = await Attendance.find({ employee: employeeId })
+      .sort({ date: -1 })
+      .limit(30) // Get last 30 days of attendance
+      .lean(); // Convert to plain JavaScript object
+
+    console.log('Found attendance records:', attendance.length);
+
+    // Transform the data to match the frontend interface
+    const formattedAttendance = attendance.map(record => ({
+      date: record.date,
+      checkIn: record.checkIn,
+      checkOut: record.checkOut,
+      status: record.status,
+      notes: record.notes
+    }));
+
+    res.json(formattedAttendance);
+  } catch (error) {
+    console.error('Error fetching employee attendance:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
