@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+maintain all folder structure , keep all cors required code , with good secirity , main environments and varialbels for dev, stage and prod , logger setup , configurations that are reuired , redis , anything that i miss and required , maintain in good 
+
+maintain status code seperately , maintain response standars and error handling proper with proper messgaes 
+
+maintain testcases

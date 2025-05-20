@@ -1,0 +1,195 @@
+# Register Admin
+curl -X POST http://localhost:3000/api/auth/register/admin -H "Content-Type: application/json" -d '{"name":"Admin","email":"admin@example.com","password":"password"}'
+
+# Register Client
+curl -X POST http://localhost:3000/api/auth/register/client -H "Content-Type: application/json" -d '{"name":"Client","email":"client@example.com","password":"password"}'
+
+# Login Admin
+curl -X POST http://localhost:3000/api/auth/login/admin -H "Content-Type: application/json" -d '{"email":"admin@example.com","password":"password"}'
+
+# Login Client
+curl -X POST http://localhost:3000/api/auth/login/client -H "Content-Type: application/json" -d '{"email":"client@example.com","password":"password"}'
+
+# Login Employee
+curl -X POST http://localhost:3000/api/auth/login/employee -H "Content-Type: application/json" -d '{"email":"employee@example.com","password":"password"}'
+
+# Authentication
+# Login
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123"}'
+
+# Shop Management
+# Create a new shop
+curl -X POST http://localhost:3000/api/shops \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "name": "My Shop",
+    "address": {
+      "street": "123 Main St",
+      "city": "New York",
+      "state": "NY",
+      "zipCode": "10001"
+    },
+    "phone": "1234567890",
+    "email": "shop@example.com"
+  }'
+
+# Get all shops (Admin only)
+curl -X GET http://localhost:3000/api/shops/all \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Get client's shops
+curl -X GET http://localhost:3000/api/shops/my-shops \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Get shop by ID
+curl -X GET http://localhost:3000/api/shops/SHOP_ID \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Update shop
+curl -X PATCH http://localhost:3000/api/shops/SHOP_ID \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "name": "Updated Shop Name",
+    "phone": "9876543210"
+  }'
+
+# Delete shop
+curl -X DELETE http://localhost:3000/api/shops/SHOP_ID \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Employee Management
+# Create a new employee
+curl -X POST http://localhost:3000/api/employees \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john@example.com",
+    "phone": "1234567890",
+    "position": "Manager",
+    "shop": "SHOP_ID"
+  }'
+
+# Upload employee document
+curl -X POST http://localhost:3000/api/employees/EMPLOYEE_ID/documents \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "type=photo" \
+  -F "document=@/path/to/photo.jpg"
+
+# Get all employees for a shop
+curl -X GET http://localhost:3000/api/employees/shop/SHOP_ID \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Get employee by ID
+curl -X GET http://localhost:3000/api/employees/EMPLOYEE_ID \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Update employee
+curl -X PATCH http://localhost:3000/api/employees/EMPLOYEE_ID \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "firstName": "Johnny",
+    "position": "Senior Manager"
+  }'
+
+# Delete employee
+curl -X DELETE http://localhost:3000/api/employees/EMPLOYEE_ID \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Attendance Management
+# Manual check-in
+curl -X POST http://localhost:3000/api/attendance/check-in \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "employeeId": "EMPLOYEE_ID",
+    "shopId": "SHOP_ID"
+  }'
+
+# QR code check-in
+curl -X POST http://localhost:3000/api/attendance/qr-check-in \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "employeeId": "EMPLOYEE_ID",
+    "shopId": "SHOP_ID"
+  }'
+
+# Check-out
+curl -X POST http://localhost:3000/api/attendance/check-out \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "employeeId": "EMPLOYEE_ID",
+    "method": "manual"
+  }'
+
+# Get attendance logs for an employee
+curl -X GET "http://localhost:3000/api/attendance/employee/EMPLOYEE_ID?startDate=2024-03-01&endDate=2024-03-31" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Get attendance logs for a shop (admin only)
+curl -X GET "http://localhost:3000/api/attendance/shop/SHOP_ID?startDate=2024-03-01&endDate=2024-03-31" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Payroll Management
+# Generate monthly payroll for a shop
+curl -X POST http://localhost:3000/api/payroll/generate/SHOP_ID \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "month": 5,
+    "year": 2024
+  }'
+
+# Get payroll summary for a shop
+curl -X GET "http://localhost:3000/api/payroll/summary/SHOP_ID?month=5&year=2024" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Approve payroll entry
+curl -X POST http://localhost:3000/api/payroll/approve/PAYROLL_ID \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Get individual payroll entry
+curl -X GET http://localhost:3000/api/payroll/PAYROLL_ID \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Payslip API Commands
+
+# 1. Generate Payslip
+curl -X POST http://localhost:3000/api/payslips/generate \
+  -H "Authorization: Bearer YOUR_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "employeeId": "EMPLOYEE_ID",
+    "month": 3,
+    "year": 2024
+  }'
+
+# 2. Get Payslip History for Employee
+curl -X GET http://localhost:3000/api/payslips/employee/EMPLOYEE_ID \
+  -H "Authorization: Bearer YOUR_AUTH_TOKEN"
+
+# 3. Get Specific Payslip
+curl -X GET http://localhost:3000/api/payslips/PAYSLIP_ID \
+  -H "Authorization: Bearer YOUR_AUTH_TOKEN"
+
+# 4. Approve Payslip
+curl -X POST http://localhost:3000/api/payslips/PAYSLIP_ID/approve \
+  -H "Authorization: Bearer YOUR_AUTH_TOKEN"
+
+# 5. Download Payslip PDF
+curl -X GET http://localhost:3000/api/payslips/PAYSLIP_ID/download \
+  -H "Authorization: Bearer YOUR_AUTH_TOKEN" \
+  --output payslip.pdf
+
+# Note: Replace the following placeholders:
+# - YOUR_AUTH_TOKEN: JWT token received after login
+# - EMPLOYEE_ID: MongoDB ID of the employee
+# - PAYSLIP_ID: MongoDB ID of the payslip 
