@@ -28,6 +28,12 @@ const employeeSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true
+  },
   shop: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Shop',

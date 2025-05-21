@@ -10,33 +10,31 @@ const upload = require('../utils/multerConfig');
 // Create a new employee
 router.post('/', verifyToken, checkRole(['client']), async (req, res) => {
   try {
-    // Verify shop ownership
-    const shop = await Shop.findById(req.body.shop);
-    if (!shop) {
-      return res.status(404).json({ error: 'Shop not found' });
-    }
-    if (shop.owner.toString() !== req.userId) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
+    const { firstName, lastName, email, phone, position, shop, dailySalary } = req.body;
 
-    // Create employee record
-    const employee = new Employee(req.body);
-    await employee.save();
-
-    // Create user account with default password
-    const defaultPassword = 'Welcome@123'; // Default password
-    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-    
+    // Create user account for employee
     const user = new User({
-      name: `${employee.firstName} ${employee.lastName}`,
-      email: employee.email,
-      password: hashedPassword,
+      name: `${firstName} ${lastName}`,
+      email,
+      password: await bcrypt.hash('Welcome@123', 10), // Default password
       role: 'employee'
     });
-
     await user.save();
 
-    // Return both employee and user data
+    // Create employee record with userId
+    const employee = new Employee({
+      firstName,
+      lastName,
+      email,
+      phone,
+      position,
+      shop,
+      dailySalary,
+      userId: user._id
+    });
+
+    await employee.save();
+
     res.status(201).json({
       employee,
       user: {
@@ -45,9 +43,10 @@ router.post('/', verifyToken, checkRole(['client']), async (req, res) => {
         email: user.email,
         role: user.role
       },
-      defaultPassword // Include this only in the response, not stored
+      defaultPassword: 'Welcome@123'
     });
   } catch (error) {
+    console.error('Error creating employee:', error);
     res.status(400).json({ error: error.message });
   }
 });

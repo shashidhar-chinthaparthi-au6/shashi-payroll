@@ -28,12 +28,24 @@ router.get('/all', verifyToken, checkRole(['admin']), async (req, res) => {
   }
 });
 
-// Get shops owned by the authenticated client
-router.get('/my-shops', verifyToken, checkRole(['client']), async (req, res) => {
+// Get shops owned by the authenticated client or all shops for employees
+router.get('/my-shops', verifyToken, async (req, res) => {
   try {
-    const shops = await Shop.find({ owner: req.userId });
+    // console.log('Full req object:', req);
+    console.log('req.userId:', req.userId);
+    const user = await User.findById(req.userId);
+    console.log('User:', user);
+    console.log('User role:', user.role);
+    let shops;
+    if (user.role === 'client') {
+      shops = await Shop.find({ owner: req.userId });
+    } else if (user.role === 'employee') {
+      shops = await Shop.find();
+    }
+    console.log('Shops found:', shops);
     res.json(shops);
   } catch (error) {
+    console.error('Error fetching shops:', error);
     res.status(500).json({ error: error.message });
   }
 });

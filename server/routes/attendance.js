@@ -18,10 +18,12 @@ const getTodayDateRange = () => {
 router.post('/check-in', verifyToken, async (req, res) => {
   try {
     const { employeeId, shopId } = req.body;
-    
+    console.log('Check-in request:', { employeeId, shopId });
     // Validate employee and shop
     const employee = await Employee.findById(employeeId);
+    console.log('Employee found:', employee ? 'yes' : 'no');
     const shop = await Shop.findById(shopId);
+    console.log('Shop found:', shop ? 'yes' : 'no');
     
     if (!employee || !shop) {
       return res.status(404).json({ message: 'Employee or shop not found' });
@@ -38,11 +40,12 @@ router.post('/check-in', verifyToken, async (req, res) => {
         $lt: tomorrow
       }
     });
-
+    console.log('Existing attendance:', existingAttendance ? 'yes' : 'no');
     if (existingAttendance) {
+      console.log('Already checked in today');
       return res.status(400).json({ message: 'Already checked in today' });
     }
-
+    console.log('Creating new attendance record');
     // Only set checkIn, do NOT set checkOut
     const attendance = new Attendance({
       employee: employeeId,
@@ -55,7 +58,7 @@ router.post('/check-in', verifyToken, async (req, res) => {
     });
 
     await attendance.save();
-    console.log('Created attendance:', attendance);
+    // console.log('Created attendance:', attendance);
     res.status(201).json(attendance);
   } catch (error) {
     console.error('Check-in error:', error);
@@ -241,21 +244,30 @@ router.get('/shop/:shopId', verifyToken, checkRole(['admin', 'client']), async (
 // Get employee's attendance records
 router.get('/employee', verifyToken, checkRole(['employee']), async (req, res) => {
   try {
-    const employeeId = req.userId;
-    console.log('Fetching attendance for employee:', employeeId);
+    // Find the employee document for the logged-in user
+    const userId = req.userId;
+    const employee = await Employee.findOne({ userId: userId });
+    if (!employee) {
+      return res.status(404).json({ error: 'Employee record not found for this user' });
+    }
 
-    const attendance = await Attendance.find({ employee: employeeId })
+    // Use the employee's _id to find attendance records
+    const attendance = await Attendance.find({ employee: employee._id })
       .sort({ date: -1 })
-      .limit(30) // Get last 30 days of attendance
-      .lean(); // Convert to plain JavaScript object
+      .limit(30)
+      .lean();
 
-    console.log('Found attendance records:', attendance.length);
-
-    // Transform the data to match the frontend interface
+    // Format the response as needed
     const formattedAttendance = attendance.map(record => ({
       date: record.date,
-      checkIn: record.checkIn,
-      checkOut: record.checkOut,
+      checkIn: record.checkIn ? {
+        time: record.checkIn.time.toISOString(),
+        method: record.checkIn.method
+      } : null,
+      checkOut: record.checkOut ? {
+        time: record.checkOut.time.toISOString(),
+        method: record.checkOut.method
+      } : null,
       status: record.status,
       notes: record.notes
     }));

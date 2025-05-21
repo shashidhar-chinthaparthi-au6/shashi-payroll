@@ -6,6 +6,7 @@ const User = require('../models/User');
 const { verifyToken, checkRole } = require('../middleware/auth');
 const responseHandler = require('../utils/responseHandler');
 const statusCodes = require('../utils/statusCodes');
+const Employee = require('../models/Employee');
 
 // Register Admin
 router.post('/register/admin', async (req, res) => {
@@ -46,45 +47,59 @@ router.post('/register/employee', async (req, res) => {
   }
 });
 
-// Login (handles all user types)
+// Login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    
-    // Find user by email regardless of role
     const user = await User.findOne({ email });
+    
     if (!user) {
-      return responseHandler.error(res, 'User not found', statusCodes.UNAUTHORIZED);
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Verify password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return responseHandler.error(res, 'Invalid credentials', statusCodes.UNAUTHORIZED);
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Generate token with user role
+    // If user is an employee, find their employee record using userId
+    let employeeData = null;
+    if (user.role === 'employee') {
+      const employee = await Employee.findOne({ userId: user._id });
+      if (employee) {
+        employeeData = {
+          id: employee._id,
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          position: employee.position,
+          shop: employee.shop
+        };
+      }
+    }
+
     const token = jwt.sign(
-      { 
-        id: user._id,
-        role: user.role 
-      }, 
-      process.env.JWT_SECRET || 'test-secret', 
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    // Return user data and token
-    responseHandler.success(res, {
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
+    res.json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          employee: employeeData
+        }
       }
-    }, 'Login successful');
+    });
   } catch (error) {
-    responseHandler.error(res, 'Server error', statusCodes.INTERNAL_SERVER_ERROR);
+    console.error('Login error:', error);
+    res.status(500).json({ message: error.message });
   }
 });
 
