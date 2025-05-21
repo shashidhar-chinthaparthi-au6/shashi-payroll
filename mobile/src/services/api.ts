@@ -1,7 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://192.168.0.101:5000/api'; // Use your Mac's local IP for mobile access
+// Use your machine's IP address here
+const API_URL = 'http://localhost:5000/api'; // Replace X with your actual IP
 
 const api = axios.create({
   baseURL: API_URL,
@@ -71,6 +72,21 @@ export const shopAPI = {
     const response = await api.get('/shops/my-shops');
     return response.data;
   },
+};
+
+export const getDashboardData = async (employeeId: string) => {
+  const response = await api.get(`/home/dashboard/${employeeId}`);
+  return response.data;
+};
+
+export const checkIn = async (employeeId: string) => {
+  const response = await api.post('/home/attendance/check-in', { employeeId });
+  return response.data;
+};
+
+export const checkOut = async (employeeId: string) => {
+  const response = await api.post('/home/attendance/check-out', { employeeId });
+  return response.data;
 };
 
 export default api; 

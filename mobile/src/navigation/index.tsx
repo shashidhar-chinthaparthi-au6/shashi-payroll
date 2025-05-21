@@ -4,39 +4,70 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { Ionicons } from '@expo/vector-icons';
 
 // Import screens
 import LoginScreen from '../screens/LoginScreen';
+import HomeScreen from '../screens/HomeScreen';
 import AttendanceScreen from '../screens/AttendanceScreen';
-import AttendanceHistoryScreen from '../screens/AttendanceHistoryScreen';
 import PayslipListScreen from '../screens/PayslipListScreen';
 import PayslipDetailScreen from '../screens/PayslipDetailScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const MainTabs = () => {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Attendance') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'Payslips') {
+            iconName = focused ? 'document-text' : 'document-text-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          } else {
+            iconName = 'home';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: 'gray',
+      })}
+    >
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen}
+        options={{
+          title: 'Home',
+        }}
+      />
       <Tab.Screen 
         name="Attendance" 
         component={AttendanceScreen}
         options={{
-          title: 'Mark Attendance',
-        }}
-      />
-      <Tab.Screen 
-        name="History" 
-        component={AttendanceHistoryScreen}
-        options={{
-          title: 'Attendance History',
+          title: 'Attendance',
         }}
       />
       <Tab.Screen 
         name="Payslips" 
         component={PayslipListScreen}
         options={{
-          title: 'My Payslips',
+          title: 'Payslips',
+        }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{
+          title: 'Profile',
         }}
       />
     </Tab.Navigator>
@@ -45,7 +76,6 @@ const MainTabs = () => {
 
 const Navigation = () => {
   const { token } = useSelector((state: RootState) => state.auth);
-  console.log('Token:', token);
 
   return (
     <NavigationContainer>

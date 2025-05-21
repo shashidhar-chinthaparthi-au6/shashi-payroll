@@ -11,6 +11,7 @@ const attendanceRoutes = require('./routes/attendance');
 const payrollRoutes = require('./routes/payroll');
 const payslipRoutes = require('./routes/payslipRoutes');
 const dashboardRoutes = require('./routes/dashboard');
+const homeRoutes = require('./routes/home');
 const config = require('./config/config');
 
 const app = express();
@@ -30,6 +31,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/payslips', payslipRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/home', homeRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
