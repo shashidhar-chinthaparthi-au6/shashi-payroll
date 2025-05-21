@@ -9,9 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 // Import screens
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
-import ProfileScreen from '../screens/ProfileScreen';
 import AttendanceNavigator from './AttendanceNavigator';
 import PayslipsNavigator from './PayslipsNavigator';
+import { ProfileNavigator } from './ProfileNavigator';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -66,9 +66,10 @@ const MainTabs = () => {
       />
       <Tab.Screen 
         name="Profile" 
-        component={ProfileScreen}
+        component={ProfileNavigator}
         options={{
           title: 'Profile',
+          headerShown: false,
         }}
       />
     </Tab.Navigator>
