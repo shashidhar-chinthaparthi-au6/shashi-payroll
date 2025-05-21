@@ -3,10 +3,23 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import { Button, Card } from 'react-native-paper';
 import { ProfileHeader } from '../../components/profile/ProfileHeader';
 import { DocumentStatusCard, DocumentStatus } from '../../components/profile/DocumentStatusCard';
+import { useDispatch } from 'react-redux';
+import { logout, clearAuth } from '../../store/slices/authSlice';
+import { AppDispatch } from '../../store';
 
 export const ProfileOverviewScreen: React.FC = () => {
-  const handleLogout = () => {
-    // TODO: Implement logout functionality
+  const dispatch = useDispatch<AppDispatch>();
+
+  const handleLogout = async () => {
+    try {
+      console.log('Logging out...');
+      await dispatch(logout()).unwrap();
+      dispatch(clearAuth());
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Even if the API call fails, clear the local state
+      dispatch(clearAuth());
+    }
   };
 
   const handleSettings = () => {

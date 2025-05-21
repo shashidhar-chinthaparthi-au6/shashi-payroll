@@ -2,14 +2,22 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
-import { logout } from '../store/slices/authSlice';
+import { logout, clearAuth } from '../store/slices/authSlice';
 import { AppDispatch } from '../store';
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
 
-  const handleLogout = () => {
-    dispatch(logout());
+  const handleLogout = async () => {
+    try {
+      console.log('Logging out...');
+      await dispatch(logout()).unwrap();
+      dispatch(clearAuth());
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Even if the API call fails, clear the local state
+      dispatch(clearAuth());
+    }
   };
 
   return (
@@ -20,7 +28,11 @@ const ProfileScreen = () => {
           <Text style={styles.infoText}>Employee Information</Text>
           {/* Add more profile information here */}
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <TouchableOpacity 
+          style={styles.logoutButton} 
+          onPress={handleLogout}
+          activeOpacity={0.7}
+        >
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>

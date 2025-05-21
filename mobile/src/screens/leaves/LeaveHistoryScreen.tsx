@@ -43,7 +43,7 @@ const leaveHistory = [
 ];
 
 const LeaveHistoryScreen = () => {
-  const markedDates = leaveHistory.reduce((acc, leave) => {
+  const markedDates = leaveHistory.reduce((acc: { [key: string]: { marked: boolean; dotColor: string } }, leave) => {
     const start = new Date(leave.startDate);
     const end = new Date(leave.endDate);
     let current = new Date(start);

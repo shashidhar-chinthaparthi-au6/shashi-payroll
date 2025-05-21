@@ -60,15 +60,26 @@ export const login = createAsyncThunk(
 );
 
 export const logout = createAsyncThunk('auth/logout', async () => {
-  await AsyncStorage.removeItem('token');
-  await AsyncStorage.removeItem('user');
-  await authAPI.logout();
+  try {
+    await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('user');
+    await authAPI.logout();
+  } catch (error) {
+    console.error('Error during logout:', error);
+  }
 });
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
-  reducers: {},
+  reducers: {
+    clearAuth: (state) => {
+      state.user = null;
+      state.token = null;
+      state.loading = false;
+      state.error = null;
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(initializeAuth.fulfilled, (state, action) => {
@@ -90,11 +101,20 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Login failed';
       })
+      .addCase(logout.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(logout.rejected, (state) => {
+        state.loading = false;
       });
   },
 });
 
+export const { clearAuth } = authSlice.actions;
 export default authSlice.reducer; 
