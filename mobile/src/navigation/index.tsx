@@ -12,6 +12,7 @@ import HomeScreen from '../screens/HomeScreen';
 import AttendanceNavigator from './AttendanceNavigator';
 import PayslipsNavigator from './PayslipsNavigator';
 import { ProfileNavigator } from './ProfileNavigator';
+import LeavesNavigator from './LeavesNavigator';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -31,6 +32,8 @@ const MainTabs = () => {
             iconName = focused ? 'document-text' : 'document-text-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Leaves') {
+            iconName = focused ? 'leaf' : 'leaf-outline';
           } else {
             iconName = 'home';
           }
@@ -61,6 +64,14 @@ const MainTabs = () => {
         component={PayslipsNavigator}
         options={{
           title: 'Payslips',
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen 
+        name="Leaves" 
+        component={LeavesNavigator}
+        options={{
+          title: 'Leaves',
           headerShown: false,
         }}
       />
