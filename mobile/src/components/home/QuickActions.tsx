@@ -2,34 +2,47 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+
+type RootTabParamList = {
+  Home: undefined;
+  Attendance: undefined;
+  Payslips: undefined;
+  Leaves: undefined;
+  Profile: undefined;
+};
+
+type NavigationProp = BottomTabNavigationProp<RootTabParamList>;
 
 const QuickActions = () => {
   const { colors } = useTheme();
+  const navigation = useNavigation<NavigationProp>();
 
   const actions = [
     {
       id: 'attendance',
       title: 'Mark Attendance',
       icon: 'clock-check-outline',
-      onPress: () => console.log('Mark attendance'),
+      onPress: () => navigation.navigate('Attendance'),
     },
     {
       id: 'payslip',
       title: 'View Payslip',
       icon: 'file-document-outline',
-      onPress: () => console.log('View payslip'),
+      onPress: () => navigation.navigate('Payslips'),
     },
     {
       id: 'leave',
       title: 'Apply Leave',
       icon: 'calendar-clock',
-      onPress: () => console.log('Apply leave'),
+      onPress: () => navigation.navigate('Leaves'),
     },
     {
       id: 'profile',
       title: 'My Profile',
       icon: 'account-outline',
-      onPress: () => console.log('View profile'),
+      onPress: () => navigation.navigate('Profile'),
     },
   ];
 
