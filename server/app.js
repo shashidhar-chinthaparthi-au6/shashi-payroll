@@ -18,6 +18,18 @@ const app = express();
 app.use(express.json());
 app.use(corsMiddleware);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  const health = {
+    uptime: process.uptime(),
+    message: 'OK',
+    timestamp: Date.now(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    redis: redisClient.connected ? 'connected' : 'disconnected'
+  };
+  res.json(health);
+});
+
 // Connect to MongoDB
 mongoose.connect(config[process.env.NODE_ENV || 'development'].mongodb.uri, {
   useNewUrlParser: true,
