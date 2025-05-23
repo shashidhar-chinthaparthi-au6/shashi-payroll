@@ -2,22 +2,44 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Card, Text, List, Divider } from 'react-native-paper';
 import { Calendar } from 'react-native-calendars';
+import { Picker } from '@react-native-picker/picker';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { leaveAPI } from '../../services/api';
+
+const months = [
+  { label: 'January', value: 0 },
+  { label: 'February', value: 1 },
+  { label: 'March', value: 2 },
+  { label: 'April', value: 3 },
+  { label: 'May', value: 4 },
+  { label: 'June', value: 5 },
+  { label: 'July', value: 6 },
+  { label: 'August', value: 7 },
+  { label: 'September', value: 8 },
+  { label: 'October', value: 9 },
+  { label: 'November', value: 10 },
+  { label: 'December', value: 11 },
+];
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
 const LeaveHistoryScreen = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const token = useSelector((state: RootState) => state.auth.token);
   const [leaveBalances, setLeaveBalances] = useState<any>({ casual: {}, sick: {}, annual: {} });
   const [leaveHistory, setLeaveHistory] = useState<any[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(currentYear);
 
   useEffect(() => {
     if (user?.employee?.id && token) {
       leaveAPI.getLeaveBalance(user.employee.id, token).then(setLeaveBalances);
-      leaveAPI.getLeaveHistory(user.employee.id, token).then(setLeaveHistory);
+      const safeMonth = Math.max(1, Math.min(Number(selectedMonth) + 1, 12));
+      console.log('Selected month (0-based):', selectedMonth, 'Sent to API:', safeMonth);
+      leaveAPI.getLeaveHistory(user.employee.id, token, safeMonth, selectedYear).then(setLeaveHistory);
     }
-  }, [user, token]);
+  }, [user, token, selectedMonth, selectedYear]);
 
   const markedDates = leaveHistory.reduce((acc: { [key: string]: { marked: boolean; dotColor: string } }, leave) => {
     const start = new Date(leave.startDate);
@@ -37,6 +59,28 @@ const LeaveHistoryScreen = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
+        <Text style={styles.sectionTitle}>Select Month & Year</Text>
+        <View style={styles.pickerRow}>
+          <Picker
+            selectedValue={selectedMonth}
+            style={styles.picker}
+            onValueChange={(itemValue) => setSelectedMonth(itemValue)}
+          >
+            {months.map((m) => (
+              <Picker.Item key={m.value} label={m.label} value={m.value} />
+            ))}
+          </Picker>
+          <Picker
+            selectedValue={selectedYear}
+            style={styles.picker}
+            onValueChange={(itemValue) => setSelectedYear(itemValue)}
+          >
+            {years.map((y) => (
+              <Picker.Item key={y} label={y.toString()} value={y} />
+            ))}
+          </Picker>
+        </View>
+
         <Text style={styles.sectionTitle}>Leave Balance</Text>
         <View style={styles.balanceContainer}>
           <Card style={styles.balanceCard}>
@@ -68,36 +112,33 @@ const LeaveHistoryScreen = () => {
           </Card>
         </View>
 
-        <Text style={styles.sectionTitle}>Calendar View</Text>
-        <Calendar
-          markedDates={markedDates}
-          theme={{
-            todayTextColor: '#007AFF',
-            selectedDayBackgroundColor: '#007AFF',
-          }}
-        />
-
         <Text style={styles.sectionTitle}>Leave History</Text>
         <List.Section>
-          {leaveHistory.map((leave) => (
-            <React.Fragment key={leave._id}>
-              <List.Item
-                title={`${leave.type.charAt(0).toUpperCase() + leave.type.slice(1)} Leave`}
-                description={`${leave.startDate?.split('T')[0]} to ${leave.endDate?.split('T')[0]}`}
-                right={() => (
-                  <Text
-                    style={[
-                      styles.status,
-                      { color: leave.status === 'approved' ? 'green' : leave.status === 'pending' ? 'orange' : 'red' },
-                    ]}
-                  >
-                    {leave.status.charAt(0).toUpperCase() + leave.status.slice(1)}
-                  </Text>
-                )}
-              />
-              <Divider />
-            </React.Fragment>
-          ))}
+          {leaveHistory.length === 0 ? (
+            <Text style={{ color: '#888', textAlign: 'center', marginVertical: 16 }}>
+              No leave records for this month.
+            </Text>
+          ) : (
+            leaveHistory.map((leave) => (
+              <React.Fragment key={leave._id}>
+                <List.Item
+                  title={`${leave.type.charAt(0).toUpperCase() + leave.type.slice(1)} Leave`}
+                  description={`${leave.startDate?.split('T')[0]} to ${leave.endDate?.split('T')[0]}`}
+                  right={() => (
+                    <Text
+                      style={[
+                        styles.status,
+                        { color: leave.status === 'approved' ? 'green' : leave.status === 'pending' ? 'orange' : 'red' },
+                      ]}
+                    >
+                      {leave.status.charAt(0).toUpperCase() + leave.status.slice(1)}
+                    </Text>
+                  )}
+                />
+                <Divider />
+              </React.Fragment>
+            ))
+          )}
         </List.Section>
       </View>
     </ScrollView>
@@ -169,6 +210,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 2,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  picker: {
+    flex: 1,
+    height: 44,
   },
 });
 

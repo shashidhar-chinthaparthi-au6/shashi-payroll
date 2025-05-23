@@ -120,9 +120,11 @@ export const leaveAPI = {
     });
     return res.data;
   },
-  getLeaveHistory: async (employeeId: string, token: string) => {
+  getLeaveHistory: async (employeeId: string, token: string, month?: number, year?: number) => {
+    const params = month && year ? { month, year } : {};
     const res = await axios.get(`${API_URL}/leave/history/${employeeId}`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
+      params,
     });
     return res.data;
   },

@@ -127,7 +127,7 @@ const LeaveRequestScreen = () => {
             mode="date"
             onChange={(event, selectedDate) => {
               setShowStartDatePicker(false);
-              if (selectedDate) {
+              if (event.type === 'set' && selectedDate) {
                 setStartDate(selectedDate);
               }
             }}
@@ -149,7 +149,7 @@ const LeaveRequestScreen = () => {
             mode="date"
             onChange={(event, selectedDate) => {
               setShowEndDatePicker(false);
-              if (selectedDate) {
+              if (event.type === 'set' && selectedDate) {
                 setEndDate(selectedDate);
               }
             }}
