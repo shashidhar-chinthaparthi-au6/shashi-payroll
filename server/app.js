@@ -19,7 +19,16 @@ app.use(express.json());
 app.use(corsMiddleware);
 
 // Connect to MongoDB
-mongoose.connect(config[process.env.NODE_ENV || 'development'].mongodb.uri, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(config[process.env.NODE_ENV || 'development'].mongodb.uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  family: 4,
+  maxPoolSize: 10,
+  retryWrites: true,
+  w: 'majority'
+})
   .then(() => logger.info('Connected to MongoDB'))
   .catch(err => logger.error('MongoDB connection error:', err));
 
