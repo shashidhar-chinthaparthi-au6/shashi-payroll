@@ -1,11 +1,20 @@
 export interface AttendanceRecord {
   id: string;
-  userId: string;
   date: string;
-  checkIn: string;
-  checkOut?: string;
-  notes?: string;
-  status: 'present' | 'absent' | 'leave';
+  checkIn: {
+    time: string;
+    method: 'manual' | 'qr';
+  } | null;
+  checkOut: {
+    time: string;
+    method: 'manual' | 'qr';
+  } | null;
+  status: 'present' | 'absent' | 'late' | 'half-day';
+  shop?: string;
+  employee?: {
+    firstName: string;
+    lastName: string;
+  };
 }
 
 export interface MonthlySummary {

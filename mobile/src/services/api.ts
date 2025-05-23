@@ -55,6 +55,28 @@ export const attendanceAPI = {
     console.log('Attendance history response:', response.data);
     return response.data;
   },
+  getMonthlySummary: async (employeeId: string, month: number, year: number) => {
+    try {
+      const response = await api.get(`/attendance/monthly-summary/${employeeId}`, {
+        params: { month, year }
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in getMonthlySummary:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch monthly summary');
+    }
+  },
+  getDetailedHistory: async (employeeId: string, startDate: string, endDate: string) => {
+    try {
+      const response = await api.get(`/attendance/history/${employeeId}`, {
+        params: { startDate, endDate }
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in getDetailedHistory:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch attendance history');
+    }
+  }
 };
 
 export const payslipAPI = {

@@ -22,7 +22,7 @@ const QuickActions = () => {
   const actions = [
     {
       id: 'attendance',
-      title: 'Mark Attendance',
+      title: 'Attendance',
       icon: 'clock-check-outline',
       onPress: () => navigation.navigate('Attendance'),
     },

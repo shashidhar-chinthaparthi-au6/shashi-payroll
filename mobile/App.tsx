@@ -5,6 +5,7 @@ import Navigation from './src/navigation';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initializeAuth } from './src/store/slices/authSlice';
 import { PaperProvider } from 'react-native-paper';
+import { AuthProvider } from './src/contexts/AuthContext';
 
 const AppContent = () => {
   useEffect(() => {
@@ -23,7 +24,9 @@ const AppContent = () => {
 export default function App() {
   return (
     <Provider store={store}>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </Provider>
   );
 } 

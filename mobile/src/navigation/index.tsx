@@ -9,10 +9,10 @@ import { Ionicons } from '@expo/vector-icons';
 // Import screens
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
-import AttendanceNavigator from './AttendanceNavigator';
 import PayslipsNavigator from './PayslipsNavigator';
 import { ProfileNavigator } from './ProfileNavigator';
 import LeavesNavigator from './LeavesNavigator';
+import AttendanceHistoryScreen from 'screens/AttendanceHistoryScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -53,7 +53,7 @@ const MainTabs = () => {
       />
       <Tab.Screen 
         name="Attendance" 
-        component={AttendanceNavigator}
+        component={AttendanceHistoryScreen}
         options={{
           title: 'Attendance',
           headerShown: false,

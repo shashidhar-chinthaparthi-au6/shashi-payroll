@@ -279,4 +279,123 @@ router.get('/employee', verifyToken, checkRole(['employee']), async (req, res) =
   }
 });
 
+// Helper to get all working days (Mon-Fri) in a month
+function getWorkingDays(year, month) {
+  const days = [];
+  const date = new Date(year, month - 1, 1);
+  while (date.getMonth() === month - 1) {
+    if (date.getDay() !== 0 && date.getDay() !== 6) {
+      days.push(new Date(date));
+    }
+    date.setDate(date.getDate() + 1);
+  }
+  return days;
+}
+
+// Get monthly attendance summary for an employee
+router.get('/monthly-summary/:employeeId', verifyToken, async (req, res) => {
+  try {
+    let { month, year } = req.query;
+    month = parseInt(month);
+    year = parseInt(year);
+
+    if (isNaN(month) || month < 1 || month > 12) {
+      return res.status(400).json({ message: 'Invalid month parameter' });
+    }
+
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    // 1. Get all attendance records for the employee in the month
+    const attendance = await Attendance.find({
+      employeeId: req.params.employeeId,
+      date: { $gte: startDate, $lte: endDate }
+    });
+
+    // 2. Get all working days in the month
+    const workingDays = getWorkingDays(year, month);
+
+    // 3. Map attendance by date (YYYY-MM-DD)
+    const attendanceMap = {};
+    attendance.forEach(a => {
+      const day = a.date.toISOString().split('T')[0];
+      attendanceMap[day] = a;
+    });
+
+    let present = 0, leave = 0, absent = 0;
+    workingDays.forEach(day => {
+      const dayStr = day.toISOString().split('T')[0];
+      const record = attendanceMap[dayStr];
+      if (record) {
+        if (record.status === 'leave') leave++;
+        else if (record.status === 'present' && record.checkIn && record.checkOut) present++;
+      } else {
+        absent++;
+      }
+    });
+
+    const summary = {
+      month: new Date(startDate).toLocaleString('default', { month: 'long' }),
+      year,
+      present,
+      absent,
+      leave,
+      total: workingDays.length
+    };
+
+    res.json(summary);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get detailed attendance history for an employee
+router.get('/history/:employeeId', verifyToken, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const query = { employeeId: req.params.employeeId };
+
+    if (startDate && endDate) {
+      query.date = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const attendance = await Attendance.find(query)
+      .sort({ date: -1 })
+      .populate('shop', 'name')
+      .populate('employeeId', 'firstName lastName');
+
+    // Format the response
+    const formattedAttendance = attendance.map(record => {
+      // Format checkIn and checkOut as objects with a time property
+      const checkInObj = record.checkIn
+        ? { time: new Date(record.checkIn).toTimeString().split(' ')[0] }
+        : null;
+      const checkOutObj = record.checkOut
+        ? { time: new Date(record.checkOut).toTimeString().split(' ')[0] }
+        : null;
+
+      return {
+        id: record._id,
+        date: record.date.toISOString().split('T')[0],
+        checkIn: checkInObj,
+        checkOut: checkOutObj,
+        status: record.status,
+        shop: record.shop?.name,
+        employee: record.employeeId ? {
+          firstName: record.employeeId.firstName,
+          lastName: record.employeeId.lastName
+        } : null
+      };
+    });
+
+    res.json(formattedAttendance);
+  } catch (error) {
+    console.error('Attendance history error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router; 
