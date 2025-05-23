@@ -4,7 +4,6 @@ const payslipService = require('../services/payslipService');
 const { verifyToken, checkRole } = require('../middleware/auth');
 const Payslip = require('../models/Payslip');
 const path = require('path');
-const Employee = require('../models/Employee');
 const User = require('../models/User');
 
 // Get logged-in employee's payslips
@@ -21,15 +20,7 @@ router.get('/employee/me', verifyToken, checkRole(['employee']), async (req, res
     }
     console.log('Found user:', { id: user._id, email: user.email });
 
-    // Find the employee record using the email
-    const employee = await Employee.findOne({ email: user.email });
-    if (!employee) {
-      console.error('Employee not found for email:', user.email);
-      return res.status(404).json({ error: 'Employee record not found' });
-    }
-    console.log('Found employee:', { id: employee._id, email: employee.email });
-
-    const payslips = await Payslip.find({ employee: employee._id })
+    const payslips = await Payslip.find({ employeeId: userId })
       .sort({ year: -1, month: -1 })
       .lean();
 
@@ -71,11 +62,48 @@ router.get('/employee/me', verifyToken, checkRole(['employee']), async (req, res
 // Get payslip history for an employee
 router.get('/employee/:employeeId', verifyToken, async (req, res) => {
   try {
-    const payslips = await Payslip.find({ employee: req.params.employeeId })
-      .sort({ year: -1, month: -1 });
-    res.json(payslips);
+    const { employeeId } = req.params;
+    console.log('Fetching payslips for employee:', employeeId);
+
+    // // Verify if the employee exists
+    // const employee = await User.findById(employeeId);
+    // if (!employee) {
+    //   console.error('Employee not found:', employeeId);
+    //   return res.status(404).json({ error: 'Employee not found' });
+    // }
+    console.log("emploeeee",employeeId)
+
+    const payslips = await Payslip.find({ employeeId })
+      .sort({ year: -1, month: -1 })
+      .lean();
+
+    console.log('Found payslips:', payslips.length);
+
+    // Transform the data to match the frontend interface
+    const formattedPayslips = payslips.map(payslip => ({
+      _id: payslip._id,
+      month: payslip.month,
+      year: payslip.year,
+      basicSalary: payslip.basicSalary,
+      allowances: payslip.allowances,
+      deductions: payslip.deductions,
+      netSalary: payslip.netSalary,
+      status: payslip.status,
+      attendance: payslip.attendance,
+      generatedAt: payslip.generatedAt,
+      approvedAt: payslip.approvedAt,
+      pdfUrl: payslip.pdfUrl
+    }));
+
+    console.log('Successfully formatted payslips');
+    res.json(formattedPayslips);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error in /employee/:employeeId endpoint:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
@@ -93,9 +121,7 @@ router.post('/generate', verifyToken, async (req, res) => {
 // Get specific payslip
 router.get('/:payslipId', verifyToken, async (req, res) => {
   try {
-    const payslip = await Payslip.findById(req.params.payslipId)
-      .populate('employee')
-      .populate('approvedBy');
+    const payslip = await Payslip.findById(req.params.payslipId);
     if (!payslip) {
       return res.status(404).json({ error: 'Payslip not found' });
     }

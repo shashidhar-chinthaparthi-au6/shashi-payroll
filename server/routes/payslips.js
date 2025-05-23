@@ -1,10 +1,12 @@
+const Payslip = require("../models/Payslip");
+
 // Get employee's payslips
 router.get('/employee', verifyToken, checkRole(['employee']), async (req, res) => {
   try {
     const employeeId = req.userId;
     console.log('Fetching payslips for employee:', employeeId);
 
-    const payslips = await Payslip.find({ employee: employeeId })
+    const payslips = await Payslip.find({ employeeId: employeeId })
       .sort({ year: -1, month: -1 })
       .lean();
 

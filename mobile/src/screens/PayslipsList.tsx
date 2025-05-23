@@ -1,66 +1,124 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  TextInput,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Picker } from '@react-native-picker/picker';
 import { PayslipsStackParamList } from '../navigation/PayslipsNavigator';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { payslipAPI } from '../services/api';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 
 type PayslipsScreenNavigationProp = NativeStackNavigationProp<PayslipsStackParamList, 'PayslipsList'>;
 
 interface Payslip {
-  id: string;
-  month: string;
+  _id: string;
+  month: number;
   year: number;
-  amount: number;
-  status: 'Pending' | 'Processed' | 'Paid';
+  basicSalary: number;
+  allowances: { name: string; amount: number }[];
+  deductions: { name: string; amount: number }[];
+  netSalary: number;
+  status: 'pending' | 'approved' | 'rejected';
+  pdfUrl: string;
+  generatedAt: string;
+  approvedAt: string;
+  attendance: {
+    present: number;
+    absent: number;
+    late: number;
+    halfDay: number;
+  };
 }
 
 const PayslipsList = () => {
   const navigation = useNavigation<PayslipsScreenNavigationProp>();
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const route = useRoute();
+  const user = useSelector((state: RootState) => state.auth.user);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [searchQuery, setSearchQuery] = useState('');
+  const [payslips, setPayslips] = useState<Payslip[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
+  useEffect(() => {
+    if (user?.employee?.id) {
+      fetchPayslips();
+    }
+  }, [selectedYear, user?.employee?.id]);
 
-  // Mock data - replace with actual API call
-  const payslips: Payslip[] = [
-    {
-      id: '1',
-      month: 'March',
-      year: 2024,
-      amount: 5000,
-      status: 'Paid',
-    },
-    {
-      id: '2',
-      month: 'February',
-      year: 2024,
-      amount: 4800,
-      status: 'Processed',
-    },
-  ];
+  const fetchPayslips = async () => {
+    if (!user?.employee?.id) {
+      Alert.alert('Error', 'Employee ID not found');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const data = await payslipAPI.getPayslipsByEmployeeId(user.employee.id);
+      console.log("All payslips:", data);
+      console.log("Selected year:", selectedYear, "Type:", typeof selectedYear);
+      
+      // Filter payslips by selected year
+      const filteredPayslips = data.filter((payslip: Payslip) => {
+        console.log("Payslip year:", payslip.year, "Type:", typeof payslip.year);
+        return Number(payslip.year) === Number(selectedYear);
+      });
+      
+      console.log("Filtered payslips:", filteredPayslips);
+      setPayslips(filteredPayslips);
+    } catch (error) {
+      console.error('Error fetching payslips:', error);
+      Alert.alert('Error', 'Failed to fetch payslips');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownload = async (payslipId: string) => {
+    try {
+      const pdfBlob = await payslipAPI.downloadPayslip(payslipId);
+      const fileUri = FileSystem.documentDirectory + 'payslip.pdf';
+      await FileSystem.writeAsStringAsync(fileUri, pdfBlob, {
+        encoding: FileSystem.EncodingType.Base64
+      });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri);
+      } else {
+        Alert.alert('Error', 'Sharing is not available on this device');
+      }
+    } catch (error) {
+      console.error('Error downloading payslip:', error);
+      Alert.alert('Error', 'Failed to download payslip');
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return `₹${amount.toLocaleString('en-IN')}`;
+  };
 
   const getStatusColor = (status: Payslip['status']) => {
     switch (status) {
-      case 'Paid':
+      case 'approved':
         return '#4CAF50';
-      case 'Processed':
-        return '#2196F3';
-      case 'Pending':
+      case 'pending':
         return '#FFC107';
+      case 'rejected':
+        return '#F44336';
       default:
         return '#757575';
     }
@@ -69,31 +127,38 @@ const PayslipsList = () => {
   const renderPayslipItem = ({ item }: { item: Payslip }) => (
     <TouchableOpacity
       style={styles.payslipItem}
-      onPress={() => navigation.navigate('PayslipDetail', { payslipId: item.id })}
+      onPress={() => navigation.navigate('PayslipDetail', { payslipId: item._id })}
     >
       <View style={styles.payslipInfo}>
-        <Text style={styles.monthYear}>{item.month} {item.year}</Text>
-        <Text style={styles.amount}>${item.amount.toFixed(2)}</Text>
+        <Text style={styles.monthYear}>{months[item.month - 1]} {item.year}</Text>
+        <Text style={styles.amount}>{formatCurrency(item.netSalary)}</Text>
       </View>
-      <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(item.status) }]}>
-        <Text style={styles.statusText}>{item.status}</Text>
+      <View style={styles.actions}>
+        <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(item.status) }]}>
+          <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.downloadButton}
+          onPress={() => handleDownload(item._id)}
+        >
+          <Text style={styles.downloadButtonText}>Download</Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2196F3" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.filters}>
         <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={selectedMonth}
-            onValueChange={(value) => setSelectedMonth(value)}
-            style={styles.picker}
-          >
-            {months.map((month, index) => (
-              <Picker.Item key={month} label={month} value={index} />
-            ))}
-          </Picker>
           <Picker
             selectedValue={selectedYear}
             onValueChange={(value) => setSelectedYear(value)}
@@ -104,18 +169,19 @@ const PayslipsList = () => {
             ))}
           </Picker>
         </View>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search payslips..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
       </View>
       <FlatList
         data={payslips}
         renderItem={renderPayslipItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
+        refreshing={loading}
+        onRefresh={fetchPayslips}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No payslips found for {selectedYear}</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -125,6 +191,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   filters: {
     padding: 16,
@@ -140,14 +211,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
   },
-  searchInput: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
-  },
   list: {
     padding: 16,
   },
@@ -156,9 +219,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -166,7 +226,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   payslipInfo: {
-    flex: 1,
+    marginBottom: 12,
   },
   monthYear: {
     fontSize: 16,
@@ -174,9 +234,15 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   amount: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#2196F3',
     marginTop: 4,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   statusIndicator: {
     paddingHorizontal: 12,
@@ -187,6 +253,28 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
+  },
+  downloadButton: {
+    backgroundColor: '#2196F3',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 4,
+  },
+  downloadButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 });
 

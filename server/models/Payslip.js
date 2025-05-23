@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 
 const payslipSchema = new mongoose.Schema({
-  employee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employee',
+  employeeId: {
+    type: String,
     required: true
   },
   month: {
@@ -62,7 +61,7 @@ const payslipSchema = new mongoose.Schema({
 });
 
 // Compound index to ensure unique payslip per employee per month/year
-payslipSchema.index({ employee: 1, month: 1, year: 1 }, { unique: true });
+payslipSchema.index({ employeeId: 1, month: 1, year: 1 }, { unique: true });
 
 const Payslip = mongoose.model('Payslip', payslipSchema);
 

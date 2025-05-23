@@ -1,88 +1,119 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Share,
-  Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { payslipAPI } from '../services/api';
 
 interface PayslipDetail {
-  id: string;
-  month: string;
+  _id: string;
+  month: number;
   year: number;
-  baseSalary: number;
+  basicSalary: number;
   allowances: {
-    housing: number;
-    transport: number;
-    other: number;
-  };
+    name: string;
+    amount: number;
+  }[];
   deductions: {
-    tax: number;
-    insurance: number;
-    other: number;
-  };
-  netAmount: number;
-  status: 'Pending' | 'Processed' | 'Paid';
-  paymentDate: string;
+    name: string;
+    amount: number;
+  }[];
+  netSalary: number;
+  status: 'pending' | 'approved' | 'rejected';
+  generatedAt: string;
+  approvedAt: string;
   attendance: {
     present: number;
     absent: number;
     late: number;
-    totalDays: number;
+    halfDay: number;
   };
+  pdfUrl: string;
 }
 
 const PayslipDetail = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { payslipId } = route.params as { payslipId: string };
+  const [payslip, setPayslip] = useState<PayslipDetail | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - replace with actual API call
-  const payslip: PayslipDetail = {
-    id: payslipId,
-    month: 'March',
-    year: 2024,
-    baseSalary: 4000,
-    allowances: {
-      housing: 1000,
-      transport: 500,
-      other: 200,
-    },
-    deductions: {
-      tax: 500,
-      insurance: 200,
-      other: 100,
-    },
-    netAmount: 4900,
-    status: 'Paid',
-    paymentDate: '2024-03-31',
-    attendance: {
-      present: 22,
-      absent: 1,
-      late: 2,
-      totalDays: 23,
-    },
+  useEffect(() => {
+    fetchPayslipDetails();
+  }, [payslipId]);
+
+  const fetchPayslipDetails = async () => {
+    try {
+      setLoading(true);
+      const data = await payslipAPI.getPayslipById(payslipId);
+      setPayslip(data);
+    } catch (error) {
+      console.error('Error fetching payslip details:', error);
+      Alert.alert('Error', 'Failed to fetch payslip details');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDownload = async () => {
-    // Implement PDF download functionality
-    console.log('Downloading PDF...');
-  };
-
-  const handleShare = async () => {
     try {
-      await Share.share({
-        message: `Payslip for ${payslip.month} ${payslip.year}`,
-        // Add PDF file when implementing download
+      const pdfBlob = await payslipAPI.downloadPayslip(payslipId);
+      const fileUri = FileSystem.documentDirectory + 'payslip.pdf';
+      await FileSystem.writeAsStringAsync(fileUri, pdfBlob, {
+        encoding: FileSystem.EncodingType.Base64
       });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri);
+      } else {
+        Alert.alert('Error', 'Sharing is not available on this device');
+      }
     } catch (error) {
-      console.error('Error sharing payslip:', error);
+      console.error('Error downloading payslip:', error);
+      Alert.alert('Error', 'Failed to download payslip');
     }
   };
+
+  const formatCurrency = (amount: number) => {
+    return `₹${amount.toLocaleString('en-IN')}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2196F3" />
+      </View>
+    );
+  }
+
+  if (!payslip) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Payslip not found</Text>
+      </View>
+    );
+  }
 
   const renderSection = (title: string, items: { label: string; value: number }[]) => (
     <View style={styles.section}>
@@ -90,7 +121,7 @@ const PayslipDetail = () => {
       {items.map((item, index) => (
         <View key={index} style={styles.row}>
           <Text style={styles.label}>{item.label}</Text>
-          <Text style={styles.value}>${item.value.toFixed(2)}</Text>
+          <Text style={styles.value}>{formatCurrency(item.value)}</Text>
         </View>
       ))}
     </View>
@@ -100,28 +131,26 @@ const PayslipDetail = () => {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>
-          Payslip - {payslip.month} {payslip.year}
+          Payslip - {months[payslip.month - 1]} {payslip.year}
         </Text>
-        <View style={[styles.statusBadge, { backgroundColor: payslip.status === 'Paid' ? '#4CAF50' : '#FFC107' }]}>
-          <Text style={styles.statusText}>{payslip.status}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: payslip.status === 'approved' ? '#4CAF50' : '#FFC107' }]}>
+          <Text style={styles.statusText}>{payslip.status.toUpperCase()}</Text>
         </View>
       </View>
 
-      {renderSection('Base Salary', [
-        { label: 'Base Salary', value: payslip.baseSalary },
+      {renderSection('Basic Salary', [
+        { label: 'Basic Salary', value: payslip.basicSalary },
       ])}
 
-      {renderSection('Allowances', [
-        { label: 'Housing Allowance', value: payslip.allowances.housing },
-        { label: 'Transport Allowance', value: payslip.allowances.transport },
-        { label: 'Other Allowances', value: payslip.allowances.other },
-      ])}
+      {renderSection('Allowances', payslip.allowances.map(a => ({
+        label: a.name,
+        value: a.amount
+      })))}
 
-      {renderSection('Deductions', [
-        { label: 'Tax', value: payslip.deductions.tax },
-        { label: 'Insurance', value: payslip.deductions.insurance },
-        { label: 'Other Deductions', value: payslip.deductions.other },
-      ])}
+      {renderSection('Deductions', payslip.deductions.map(d => ({
+        label: d.name,
+        value: d.amount
+      })))}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Attendance Summary</Text>
@@ -139,24 +168,40 @@ const PayslipDetail = () => {
             <Text style={styles.attendanceLabel}>Late</Text>
           </View>
           <View style={styles.attendanceItem}>
-            <Text style={styles.attendanceValue}>{payslip.attendance.totalDays}</Text>
-            <Text style={styles.attendanceLabel}>Total Days</Text>
+            <Text style={styles.attendanceValue}>{payslip.attendance.halfDay}</Text>
+            <Text style={styles.attendanceLabel}>Half Day</Text>
           </View>
         </View>
       </View>
 
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Dates</Text>
+        <View style={styles.row}>
+          <Text style={styles.label}>Generated On</Text>
+          <Text style={styles.value}>{formatDate(payslip.generatedAt)}</Text>
+        </View>
+        {payslip.approvedAt && (
+          <View style={styles.row}>
+            <Text style={styles.label}>Approved On</Text>
+            <Text style={styles.value}>{formatDate(payslip.approvedAt)}</Text>
+          </View>
+        )}
+      </View>
+
       <View style={styles.totalSection}>
-        <Text style={styles.totalLabel}>Net Amount</Text>
-        <Text style={styles.totalAmount}>${payslip.netAmount.toFixed(2)}</Text>
+        <Text style={styles.totalLabel}>Net Salary</Text>
+        <Text style={styles.totalAmount}>{formatCurrency(payslip.netSalary)}</Text>
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.button} onPress={handleDownload}>
-          <Text style={styles.buttonText}>Download PDF</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.shareButton]} onPress={handleShare}>
-          <Text style={styles.buttonText}>Share</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={[styles.button, styles.downloadButton]} onPress={handleDownload}>
+            <Text style={styles.buttonText}>Download PDF</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.shareButton]} onPress={handleDownload}>
+            <Text style={styles.buttonText}>Share PDF</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScrollView>
   );
@@ -166,6 +211,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#F44336',
   },
   header: {
     backgroundColor: '#fff',
@@ -258,16 +317,21 @@ const styles = StyleSheet.create({
     color: '#2196F3',
   },
   actions: {
-    flexDirection: 'row',
     padding: 16,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     gap: 12,
   },
   button: {
     flex: 1,
-    backgroundColor: '#2196F3',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
+  },
+  downloadButton: {
+    backgroundColor: '#2196F3',
   },
   shareButton: {
     backgroundColor: '#4CAF50',

@@ -81,14 +81,45 @@ export const attendanceAPI = {
 
 export const payslipAPI = {
   getPayslips: async () => {
-    const response = await api.get('/payslips/employee/me');
-    console.log('Payslips response:', response.data);
-    return response.data;
+    try {
+      const response = await api.get('/payslips/employee/me');
+      console.log('Payslips response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching payslips:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch payslips');
+    }
+  },
+  getPayslipsByEmployeeId: async (employeeId: string) => {
+    try {
+      const response = await api.get(`/payslips/employee/${employeeId}`);
+      console.log('Payslips response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching payslips:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch payslips');
+    }
   },
   getPayslipById: async (id: string) => {
-    const response = await api.get(`/payslips/${id}`);
-    return response.data;
+    try {
+      const response = await api.get(`/payslips/${id}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching payslip details:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch payslip details');
+    }
   },
+  downloadPayslip: async (id: string) => {
+    try {
+      const response = await api.get(`/payslips/${id}/download`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error downloading payslip:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to download payslip');
+    }
+  }
 };
 
 export const shopAPI = {

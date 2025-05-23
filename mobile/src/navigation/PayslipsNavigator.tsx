@@ -4,38 +4,39 @@ import PayslipsList from '../screens/PayslipsList';
 import PayslipDetail from '../screens/PayslipDetail';
 
 export type PayslipsStackParamList = {
-  PayslipsList: undefined;
+  PayslipsList: { employeeId?: string };
   PayslipDetail: { payslipId: string };
 };
 
 const Stack = createNativeStackNavigator<PayslipsStackParamList>();
 
-const PayslipsNavigator = () => {
+interface PayslipsNavigatorProps {
+  employeeId?: string;
+}
+
+const PayslipsNavigator: React.FC<PayslipsNavigatorProps> = ({ employeeId }) => {
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: '#2196F3',
         },
+        headerTintColor: '#fff',
         headerTitleStyle: {
-          fontSize: 18,
           fontWeight: '600',
         },
       }}
     >
-      <Stack.Screen
-        name="PayslipsList"
+      <Stack.Screen 
+        name="PayslipsList" 
         component={PayslipsList}
-        options={{
-          title: 'Payslips',
-        }}
+        initialParams={employeeId ? { employeeId } : undefined}
+        options={{ title: 'Payslips' }}
       />
-      <Stack.Screen
-        name="PayslipDetail"
+      <Stack.Screen 
+        name="PayslipDetail" 
         component={PayslipDetail}
-        options={{
-          title: 'Payslip Details',
-        }}
+        options={{ title: 'Payslip Details' }}
       />
     </Stack.Navigator>
   );
