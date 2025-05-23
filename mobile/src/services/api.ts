@@ -113,4 +113,25 @@ export const checkOut = async (employeeId: string) => {
   return response.data;
 };
 
+export const leaveAPI = {
+  requestLeave: async (leaveData: any, token: string) => {
+    const res = await axios.post(`${API_URL}/leave/request`, leaveData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  },
+  getLeaveHistory: async (employeeId: string, token: string) => {
+    const res = await axios.get(`${API_URL}/leave/history/${employeeId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  },
+  getLeaveBalance: async (employeeId: string, token: string) => {
+    const res = await axios.get(`${API_URL}/leave/balance/${employeeId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  }
+};
+
 export default api; 

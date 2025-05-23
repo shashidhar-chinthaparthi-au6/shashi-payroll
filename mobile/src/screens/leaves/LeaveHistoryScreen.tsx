@@ -1,53 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Card, Text, List, Divider } from 'react-native-paper';
 import { Calendar } from 'react-native-calendars';
-
-// Mock data - replace with actual data from your backend
-const leaveBalances = {
-  casual: {
-    total: 10,
-    consumed: 3,
-    available: 7
-  },
-  sick: {
-    total: 7,
-    consumed: 2,
-    available: 5
-  },
-  annual: {
-    total: 20,
-    consumed: 8,
-    available: 12
-  }
-};
-
-const leaveHistory = [
-  {
-    id: '1',
-    type: 'casual',
-    startDate: '2024-03-01',
-    endDate: '2024-03-02',
-    status: 'approved',
-    reason: 'Personal work',
-  },
-  {
-    id: '2',
-    type: 'sick',
-    startDate: '2024-02-15',
-    endDate: '2024-02-16',
-    status: 'approved',
-    reason: 'Fever',
-  },
-  // Add more mock data as needed
-];
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import { leaveAPI } from '../../services/api';
 
 const LeaveHistoryScreen = () => {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const token = useSelector((state: RootState) => state.auth.token);
+  const [leaveBalances, setLeaveBalances] = useState<any>({ casual: {}, sick: {}, annual: {} });
+  const [leaveHistory, setLeaveHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user?.employee?.id && token) {
+      leaveAPI.getLeaveBalance(user.employee.id, token).then(setLeaveBalances);
+      leaveAPI.getLeaveHistory(user.employee.id, token).then(setLeaveHistory);
+    }
+  }, [user, token]);
+
   const markedDates = leaveHistory.reduce((acc: { [key: string]: { marked: boolean; dotColor: string } }, leave) => {
     const start = new Date(leave.startDate);
     const end = new Date(leave.endDate);
     let current = new Date(start);
-
     while (current <= end) {
       const dateStr = current.toISOString().split('T')[0];
       acc[dateStr] = {
@@ -67,28 +42,28 @@ const LeaveHistoryScreen = () => {
           <Card style={styles.balanceCard}>
             <Card.Content>
               <Text style={styles.balanceTitle}>Casual Leave</Text>
-              <Text style={styles.balanceValue}>{leaveBalances.casual.available} days</Text>
+              <Text style={styles.balanceValue}>{leaveBalances.casual?.available ?? '-'} days</Text>
               <Text style={styles.balanceSubtext}>Available</Text>
-              <Text style={styles.consumedText}>Consumed: {leaveBalances.casual.consumed}</Text>
-              <Text style={styles.totalText}>Total: {leaveBalances.casual.total}</Text>
+              <Text style={styles.consumedText}>Consumed: {leaveBalances.casual?.consumed ?? '-'}</Text>
+              <Text style={styles.totalText}>Total: {leaveBalances.casual?.total ?? '-'}</Text>
             </Card.Content>
           </Card>
           <Card style={styles.balanceCard}>
             <Card.Content>
               <Text style={styles.balanceTitle}>Sick Leave</Text>
-              <Text style={styles.balanceValue}>{leaveBalances.sick.available} days</Text>
+              <Text style={styles.balanceValue}>{leaveBalances.sick?.available ?? '-'} days</Text>
               <Text style={styles.balanceSubtext}>Available</Text>
-              <Text style={styles.consumedText}>Consumed: {leaveBalances.sick.consumed}</Text>
-              <Text style={styles.totalText}>Total: {leaveBalances.sick.total}</Text>
+              <Text style={styles.consumedText}>Consumed: {leaveBalances.sick?.consumed ?? '-'}</Text>
+              <Text style={styles.totalText}>Total: {leaveBalances.sick?.total ?? '-'}</Text>
             </Card.Content>
           </Card>
           <Card style={styles.balanceCard}>
             <Card.Content>
               <Text style={styles.balanceTitle}>Annual Leave</Text>
-              <Text style={styles.balanceValue}>{leaveBalances.annual.available} days</Text>
+              <Text style={styles.balanceValue}>{leaveBalances.annual?.available ?? '-'} days</Text>
               <Text style={styles.balanceSubtext}>Available</Text>
-              <Text style={styles.consumedText}>Consumed: {leaveBalances.annual.consumed}</Text>
-              <Text style={styles.totalText}>Total: {leaveBalances.annual.total}</Text>
+              <Text style={styles.consumedText}>Consumed: {leaveBalances.annual?.consumed ?? '-'}</Text>
+              <Text style={styles.totalText}>Total: {leaveBalances.annual?.total ?? '-'}</Text>
             </Card.Content>
           </Card>
         </View>
@@ -105,15 +80,15 @@ const LeaveHistoryScreen = () => {
         <Text style={styles.sectionTitle}>Leave History</Text>
         <List.Section>
           {leaveHistory.map((leave) => (
-            <React.Fragment key={leave.id}>
+            <React.Fragment key={leave._id}>
               <List.Item
                 title={`${leave.type.charAt(0).toUpperCase() + leave.type.slice(1)} Leave`}
-                description={`${leave.startDate} to ${leave.endDate}`}
+                description={`${leave.startDate?.split('T')[0]} to ${leave.endDate?.split('T')[0]}`}
                 right={() => (
                   <Text
                     style={[
                       styles.status,
-                      { color: leave.status === 'approved' ? 'green' : 'orange' },
+                      { color: leave.status === 'approved' ? 'green' : leave.status === 'pending' ? 'orange' : 'red' },
                     ]}
                   >
                     {leave.status.charAt(0).toUpperCase() + leave.status.slice(1)}
@@ -132,16 +107,25 @@ const LeaveHistoryScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f9fa',
   },
   content: {
     padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    margin: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     marginTop: 16,
     marginBottom: 12,
+    color: '#222',
   },
   balanceContainer: {
     flexDirection: 'row',
@@ -151,19 +135,25 @@ const styles = StyleSheet.create({
   balanceCard: {
     flex: 1,
     marginHorizontal: 4,
+    backgroundColor: '#f5faff',
+    borderRadius: 10,
+    elevation: 2,
   },
   balanceTitle: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    color: '#007AFF',
+    fontWeight: 'bold',
   },
   balanceValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     marginTop: 4,
+    color: '#222',
   },
   status: {
     alignSelf: 'center',
     fontWeight: 'bold',
+    fontSize: 15,
   },
   balanceSubtext: {
     fontSize: 12,

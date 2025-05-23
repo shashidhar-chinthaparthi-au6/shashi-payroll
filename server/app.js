@@ -32,6 +32,7 @@ app.use('/api/payroll', payrollRoutes);
 app.use('/api/payslips', payslipRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/home', homeRoutes);
+app.use('/api/leave', require('./routes/leave'));
 
 // Error handling middleware
 app.use(errorHandler);

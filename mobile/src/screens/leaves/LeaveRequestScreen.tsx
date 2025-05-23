@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Button, TextInput, SegmentedButtons, Text, Card } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import { leaveAPI } from '../../services/api';
 
 type LeaveType = 'casual' | 'sick' | 'annual';
 
@@ -14,42 +17,46 @@ type RootStackParamList = {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'LeaveRequest'>;
 
-// Mock data - replace with actual data from your backend
-const leaveBalances = {
-  casual: {
-    total: 10,
-    consumed: 3,
-    available: 7
-  },
-  sick: {
-    total: 7,
-    consumed: 2,
-    available: 5
-  },
-  annual: {
-    total: 20,
-    consumed: 8,
-    available: 12
-  }
-};
-
 const LeaveRequestScreen = () => {
   const navigation = useNavigation<NavigationProp>();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const token = useSelector((state: RootState) => state.auth.token);
   const [leaveType, setLeaveType] = useState<LeaveType>('casual');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [reason, setReason] = useState('');
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [leaveBalances, setLeaveBalances] = useState<any>({ casual: {}, sick: {}, annual: {} });
 
-  const handleSubmit = () => {
-    // TODO: Implement leave request submission
-    console.log({
-      leaveType,
-      startDate,
-      endDate,
-      reason,
-    });
+  useEffect(() => {
+    if (user?.employee?.id && token) {
+      leaveAPI.getLeaveBalance(user.employee.id, token).then(setLeaveBalances);
+    }
+  }, [user, token]);
+
+  const handleSubmit = async () => {
+    if (!user?.employee?.id) {
+      Alert.alert('Error', 'Employee information not found.');
+      return;
+    }
+    if (!token) {
+      Alert.alert('Error', 'User token not found.');
+      return;
+    }
+    try {
+      await leaveAPI.requestLeave({
+        employeeId: user.employee.id,
+        type: leaveType,
+        startDate,
+        endDate,
+        reason
+      }, token);
+      Alert.alert('Success', 'Leave request submitted!');
+      setReason('');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to submit leave request.');
+    }
   };
 
   const getDaysDifference = (start: Date, end: Date) => {
@@ -58,7 +65,7 @@ const LeaveRequestScreen = () => {
   };
 
   const requestedDays = getDaysDifference(startDate, endDate);
-  const availableDays = leaveBalances[leaveType].available;
+  const availableDays = leaveBalances[leaveType]?.available || 0;
 
   return (
     <ScrollView style={styles.container}>
@@ -68,28 +75,28 @@ const LeaveRequestScreen = () => {
           <Card style={styles.balanceCard}>
             <Card.Content>
               <Text style={styles.balanceTitle}>Casual Leave</Text>
-              <Text style={styles.balanceValue}>{leaveBalances.casual.available}</Text>
+              <Text style={styles.balanceValue}>{leaveBalances.casual?.available ?? '-'} </Text>
               <Text style={styles.balanceSubtext}>Available</Text>
-              <Text style={styles.consumedText}>Used: {leaveBalances.casual.consumed}</Text>
-              <Text style={styles.totalText}>Total: {leaveBalances.casual.total}</Text>
+              <Text style={styles.consumedText}>Used: {leaveBalances.casual?.consumed ?? '-'}</Text>
+              <Text style={styles.totalText}>Total: {leaveBalances.casual?.total ?? '-'}</Text>
             </Card.Content>
           </Card>
           <Card style={styles.balanceCard}>
             <Card.Content>
               <Text style={styles.balanceTitle}>Sick Leave</Text>
-              <Text style={styles.balanceValue}>{leaveBalances.sick.available}</Text>
+              <Text style={styles.balanceValue}>{leaveBalances.sick?.available ?? '-'}</Text>
               <Text style={styles.balanceSubtext}>Available</Text>
-              <Text style={styles.consumedText}>Used: {leaveBalances.sick.consumed}</Text>
-              <Text style={styles.totalText}>Total: {leaveBalances.sick.total}</Text>
+              <Text style={styles.consumedText}>Used: {leaveBalances.sick?.consumed ?? '-'}</Text>
+              <Text style={styles.totalText}>Total: {leaveBalances.sick?.total ?? '-'}</Text>
             </Card.Content>
           </Card>
           <Card style={styles.balanceCard}>
             <Card.Content>
               <Text style={styles.balanceTitle}>Annual Leave</Text>
-              <Text style={styles.balanceValue}>{leaveBalances.annual.available}</Text>
+              <Text style={styles.balanceValue}>{leaveBalances.annual?.available ?? '-'}</Text>
               <Text style={styles.balanceSubtext}>Available</Text>
-              <Text style={styles.consumedText}>Used: {leaveBalances.annual.consumed}</Text>
-              <Text style={styles.totalText}>Total: {leaveBalances.annual.total}</Text>
+              <Text style={styles.consumedText}>Used: {leaveBalances.annual?.consumed ?? '-'}</Text>
+              <Text style={styles.totalText}>Total: {leaveBalances.annual?.total ?? '-'}</Text>
             </Card.Content>
           </Card>
         </View>
@@ -106,9 +113,11 @@ const LeaveRequestScreen = () => {
         />
 
         <Text style={styles.label}>Start Date</Text>
-        <Button 
-          mode="outlined" 
+        <Button
+          mode="outlined"
           onPress={() => setShowStartDatePicker(true)}
+          style={styles.dateButton}
+          labelStyle={styles.dateButtonLabel}
         >
           {startDate.toLocaleDateString()}
         </Button>
@@ -126,9 +135,11 @@ const LeaveRequestScreen = () => {
         )}
 
         <Text style={styles.label}>End Date</Text>
-        <Button 
-          mode="outlined" 
+        <Button
+          mode="outlined"
           onPress={() => setShowEndDatePicker(true)}
+          style={styles.dateButton}
+          labelStyle={styles.dateButtonLabel}
         >
           {endDate.toLocaleDateString()}
         </Button>
@@ -156,6 +167,8 @@ const LeaveRequestScreen = () => {
         <Text style={styles.label}>Reason</Text>
         <TextInput
           mode="outlined"
+          style={styles.reasonInput}
+          theme={{ colors: { text: '#222', placeholder: '#888', primary: '#007AFF', background: '#fff' } }}
           multiline
           numberOfLines={4}
           value={reason}
@@ -163,19 +176,21 @@ const LeaveRequestScreen = () => {
           placeholder="Enter reason for leave"
         />
 
-        <Button 
-          mode="contained" 
+        <Button
+          mode="contained"
           onPress={handleSubmit}
           style={styles.submitButton}
+          labelStyle={styles.submitButtonLabel}
           disabled={requestedDays > availableDays || !reason.trim()}
         >
           Submit Request
         </Button>
 
-        <Button 
-          mode="text" 
+        <Button
+          mode="outlined"
           onPress={() => navigation.navigate('LeaveHistory')}
           style={styles.historyButton}
+          labelStyle={styles.historyButtonLabel}
         >
           View Leave History
         </Button>
@@ -187,20 +202,31 @@ const LeaveRequestScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f9fa',
   },
   content: {
     padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    margin: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   label: {
     fontSize: 16,
     marginBottom: 8,
-    marginTop: 16,
+    marginTop: 20,
+    color: '#222',
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
+    marginTop: 16,
     marginBottom: 12,
+    color: '#222',
   },
   balanceContainer: {
     flexDirection: 'row',
@@ -210,15 +236,25 @@ const styles = StyleSheet.create({
   balanceCard: {
     flex: 1,
     marginHorizontal: 4,
+    backgroundColor: '#f5faff',
+    borderRadius: 10,
+    elevation: 2,
   },
   balanceTitle: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    color: '#007AFF',
+    fontWeight: 'bold',
   },
   balanceValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     marginTop: 4,
+    color: '#222',
+  },
+  status: {
+    alignSelf: 'center',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
   balanceSubtext: {
     fontSize: 12,
@@ -238,15 +274,57 @@ const styles = StyleSheet.create({
   durationText: {
     fontSize: 16,
     marginTop: 8,
+    color: '#222',
   },
   warningText: {
     color: '#FF6B6B',
+    fontWeight: 'bold',
+  },
+  reasonInput: {
+    backgroundColor: '#fff',
+    color: '#222',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  dateButton: {
+    backgroundColor: '#fff',
+    borderColor: '#ccc',
+    marginBottom: 8,
+  },
+  dateButtonLabel: {
+    color: '#222',
+    fontSize: 16,
   },
   submitButton: {
     marginTop: 24,
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+  },
+  submitButtonLabel: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
+    letterSpacing: 1,
   },
   historyButton: {
-    marginTop: 8,
+    marginTop: 16,
+    borderColor: '#007AFF',
+    borderWidth: 1.5,
+    borderRadius: 8,
+    backgroundColor: '#f5faff',
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  historyButtonLabel: {
+    color: '#007AFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+    letterSpacing: 0.5,
   },
 });
 
