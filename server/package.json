@@ -7,7 +7,8 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "test": "jest",
-    "postinstall": "npm rebuild bcrypt --build-from-source"
+    "postinstall": "npm rebuild bcrypt --build-from-source",
+    "drop-db": "node scripts/drop-db.js"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",

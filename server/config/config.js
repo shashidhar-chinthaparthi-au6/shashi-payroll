@@ -60,5 +60,8 @@ module.exports = {
     cors: {
       origin: process.env.CORS_ORIGIN || '*'
     }
-  }
+  },
+  mongoURI: process.env.MONGODB_URI || 'mongodb://localhost:27017/payroll',
+  jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
+  port: process.env.PORT || 5000
 }; 

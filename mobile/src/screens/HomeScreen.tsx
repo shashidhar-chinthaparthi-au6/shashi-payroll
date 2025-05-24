@@ -6,6 +6,7 @@ import QuickActions from '../components/home/QuickActions';
 import NotificationsList from '../components/home/NotificationsList';
 import CalendarWidget from '../components/home/CalendarWidget';
 import { getDashboardData } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 type DashboardData = {
   employee: {
@@ -39,11 +40,16 @@ const HomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [employeeId] = useState('682fe54b71870e49c8c2fe1c'); // Actual seeded employee ID
+  const { user } = useAuth();
 
   const fetchDashboardData = async () => {
+    if (!user) {
+      setError('User not authenticated');
+      return;
+    }
+
     try {
-      const data = await getDashboardData(employeeId);
+      const data = await getDashboardData(user.id);
       // Override events with static data for testing
       const staticEvents = [
         { _id: '1', title: 'Team Meeting', date: '2023-10-15', type: 'meeting' },
@@ -60,7 +66,7 @@ const HomeScreen = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [user]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -76,7 +82,7 @@ const HomeScreen = () => {
     );
   }
 
-  if (!dashboardData) {
+  if (!dashboardData || !user?.id) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
@@ -94,7 +100,7 @@ const HomeScreen = () => {
       <WelcomeBanner employee={dashboardData.employee} />
       <AttendanceStatus 
         attendance={dashboardData.attendance}
-        employeeId={employeeId}
+        userId={user.id}
         onUpdate={fetchDashboardData}
       />
       <QuickActions />

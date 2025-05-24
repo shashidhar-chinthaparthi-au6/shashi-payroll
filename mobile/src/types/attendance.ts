@@ -10,10 +10,9 @@ export interface AttendanceRecord {
     method: 'manual' | 'qr';
   } | null;
   status: 'present' | 'absent' | 'late' | 'half-day';
-  shop?: string;
-  employee?: {
-    firstName: string;
-    lastName: string;
+  user?: {
+    name: string;
+    email: string;
   };
 }
 

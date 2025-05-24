@@ -2,22 +2,29 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { checkIn, checkOut } from '../../services/api';
+import { attendanceAPI } from '../../services/api';
 
 type Attendance = {
-  _id: string;
-  checkIn: string;
-  checkOut?: string;
+  id: string;
+  date: string;
+  checkIn: {
+    time: string;
+    method: string;
+  };
+  checkOut?: {
+    time?: string;
+    method: string;
+  };
   status: 'present' | 'absent' | 'late' | 'half-day';
 };
 
 type Props = {
-  attendance: Attendance;
-  employeeId: string;
+  attendance: Attendance | null;
+  userId: string;
   onUpdate: () => void;
 };
 
-const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
+const AttendanceStatus = ({ attendance, userId, onUpdate }: Props) => {
   const { colors } = useTheme();
 
   const isToday = (dateString: string) => {
@@ -29,10 +36,10 @@ const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
   };
 
   const getStatusColor = () => {
-    if (!attendance || !isToday(attendance.checkIn)) return '#F44336';
+    if (!attendance) return '#F44336';
     switch (attendance.status) {
       case 'present':
-        return attendance.checkOut ? '#2196F3' : '#4CAF50';
+        return attendance.checkOut?.time ? '#2196F3' : '#4CAF50';
       case 'late':
         return '#FF9800';
       case 'half-day':
@@ -45,14 +52,14 @@ const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
   };
 
   const getStatusText = () => {
-    if (!attendance || !isToday(attendance.checkIn)) return 'Not Checked In';
-    if (attendance.checkOut) return 'Shift Completed';
+    if (!attendance) return 'Not Checked In';
+    if (attendance.checkOut?.time) return 'Shift Completed';
     return attendance.status.charAt(0).toUpperCase() + attendance.status.slice(1);
   };
 
   const handleCheckIn = async () => {
     try {
-      await checkIn(employeeId);
+      await attendanceAPI.markAttendance(userId);
       onUpdate();
     } catch (error) {
       console.error('Check-in error:', error);
@@ -61,7 +68,7 @@ const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
 
   const handleCheckOut = async () => {
     try {
-      await checkOut(employeeId);
+      await attendanceAPI.markAttendance(userId);
       onUpdate();
     } catch (error) {
       console.error('Check-out error:', error);
@@ -69,7 +76,7 @@ const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
   };
 
   const renderActionButton = () => {
-    if (!attendance || !isToday(attendance.checkIn)) {
+    if (!attendance) {
       return (
         <TouchableOpacity 
           style={[styles.checkoutButton, { backgroundColor: colors.primary }]}
@@ -80,7 +87,7 @@ const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
       );
     }
 
-    if (attendance.checkOut) {
+    if (attendance.checkOut?.time) {
       return (
         <View style={styles.completedContainer}>
           <Icon name="check-circle" size={24} color="#4CAF50" style={styles.completedIcon} />
@@ -110,10 +117,10 @@ const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
         <Icon name="clock-outline" size={24} color="#fff" />
         <View style={styles.statusInfo}>
           <Text style={styles.statusText}>{getStatusText()}</Text>
-          {attendance && isToday(attendance.checkIn) && (
+          {attendance && (
             <Text style={styles.timeText}>
-              {attendance.checkIn ? new Date(attendance.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-              {attendance.checkOut ? ` - ${new Date(attendance.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+              {attendance.checkIn ? new Date(attendance.checkIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+              {attendance.checkOut?.time ? ` - ${new Date(attendance.checkOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
             </Text>
           )}
         </View>
@@ -126,15 +133,15 @@ const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
 
 const styles = StyleSheet.create({
   container: {
-    margin: 16,
     padding: 16,
     backgroundColor: '#fff',
-    borderRadius: 12,
-    elevation: 4,
+    borderRadius: 8,
+    margin: 16,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   header: {
     flexDirection: 'row',
@@ -145,8 +152,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#333',
   },
   date: {
+    fontSize: 14,
     color: '#666',
   },
   statusCard: {
@@ -160,11 +169,12 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   statusText: {
-    color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    color: '#fff',
   },
   timeText: {
+    fontSize: 14,
     color: '#fff',
     opacity: 0.9,
   },
@@ -179,16 +189,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   completedContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 8,
   },
   completedIcon: {
-    marginBottom: 8,
+    marginRight: 8,
   },
   completedText: {
     color: '#4CAF50',
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
+    fontWeight: 'bold',
   },
 });
 

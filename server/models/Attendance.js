@@ -1,26 +1,25 @@
 const mongoose = require('mongoose');
 
 const attendanceSchema = new mongoose.Schema({
-  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee', required: true },
-  shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   date: { type: Date, required: true },
-  checkIn: { 
+  checkIn: {
     time: { type: Date },
-    method: { type: String, enum: ['manual', 'qr'] }
+    method: { type: String, enum: ['manual', 'qr', 'biometric'], default: 'manual' }
   },
-  checkOut: { 
+  checkOut: {
     time: { type: Date },
-    method: { type: String, enum: ['manual', 'qr'] }
+    method: { type: String, enum: ['manual', 'qr', 'biometric'], default: 'manual' }
   },
   status: { 
     type: String, 
-    enum: ['present', 'absent', 'late', 'half-day'],
-    required: true 
+    enum: ['present', 'absent', 'late', 'half-day'], 
+    default: 'absent' 
   },
-  notes: String
-});
+  notes: { type: String }
+}, { timestamps: true });
 
-// Compound index for efficient queries
-attendanceSchema.index({ employeeId: 1, date: 1 }, { unique: true });
+// Indexes for faster queries
+attendanceSchema.index({ userId: 1, date: 1 }, { unique: true });
 
 module.exports = mongoose.model('Attendance', attendanceSchema); 

@@ -6,16 +6,21 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
+  Alert,
 } from 'react-native';
 import { format } from 'date-fns';
 import { AttendanceState } from '../types/attendance';
+import { useAuth } from '../contexts/AuthContext';
+import { checkIn, checkOut } from '../services/api';
 
 const MarkAttendanceScreen: React.FC = () => {
+  const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [notes, setNotes] = useState('');
   const [attendanceState, setAttendanceState] = useState<AttendanceState>({
     currentStatus: 'not-checked-in',
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -26,27 +31,47 @@ const MarkAttendanceScreen: React.FC = () => {
   }, []);
 
   const handleCheckIn = async () => {
+    if (!user?.id) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
+
     try {
-      // TODO: Implement API call to mark check-in
+      setLoading(true);
+      await checkIn(user.id);
       setAttendanceState({
         currentStatus: 'checked-in',
         lastCheckIn: currentTime.toISOString(),
       });
+      Alert.alert('Success', 'Check-in successful');
     } catch (error) {
       console.error('Error checking in:', error);
+      Alert.alert('Error', 'Failed to check in');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCheckOut = async () => {
+    if (!user?.id) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
+
     try {
-      // TODO: Implement API call to mark check-out
+      setLoading(true);
+      await checkOut(user.id);
       setAttendanceState({
         currentStatus: 'checked-out',
         lastCheckIn: attendanceState.lastCheckIn,
         lastCheckOut: currentTime.toISOString(),
       });
+      Alert.alert('Success', 'Check-out successful');
     } catch (error) {
       console.error('Error checking out:', error);
+      Alert.alert('Error', 'Failed to check out');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,10 +103,10 @@ const MarkAttendanceScreen: React.FC = () => {
           style={[
             styles.button,
             styles.checkInButton,
-            attendanceState.currentStatus !== 'not-checked-in' && styles.disabledButton
+            (attendanceState.currentStatus !== 'not-checked-in' || loading) && styles.disabledButton
           ]}
           onPress={handleCheckIn}
-          disabled={attendanceState.currentStatus !== 'not-checked-in'}
+          disabled={attendanceState.currentStatus !== 'not-checked-in' || loading}
         >
           <Text style={styles.buttonText}>Check In</Text>
         </TouchableOpacity>
@@ -90,10 +115,10 @@ const MarkAttendanceScreen: React.FC = () => {
           style={[
             styles.button,
             styles.checkOutButton,
-            attendanceState.currentStatus !== 'checked-in' && styles.disabledButton
+            (attendanceState.currentStatus !== 'checked-in' || loading) && styles.disabledButton
           ]}
           onPress={handleCheckOut}
-          disabled={attendanceState.currentStatus !== 'checked-in'}
+          disabled={attendanceState.currentStatus !== 'checked-in' || loading}
         >
           <Text style={styles.buttonText}>Check Out</Text>
         </TouchableOpacity>

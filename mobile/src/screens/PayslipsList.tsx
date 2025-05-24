@@ -55,20 +55,20 @@ const PayslipsList = () => {
   ];
 
   useEffect(() => {
-    if (user?.employee?.id) {
+    if (user?.id) {
       fetchPayslips();
     }
-  }, [selectedYear, user?.employee?.id]);
+  }, [selectedYear, user?.id]);
 
   const fetchPayslips = async () => {
-    if (!user?.employee?.id) {
-      Alert.alert('Error', 'Employee ID not found');
+    if (!user?.id) {
+      Alert.alert('Error', 'User ID not found');
       return;
     }
 
     try {
       setLoading(true);
-      const data = await payslipAPI.getPayslipsByEmployeeId(user.employee.id);
+      const data = await payslipAPI.getPayslipsByUserId(user.id);
       console.log("All payslips:", data);
       console.log("Selected year:", selectedYear, "Type:", typeof selectedYear);
       

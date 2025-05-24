@@ -37,11 +37,44 @@ router.post('/register/client', async (req, res) => {
 // Register Employee
 router.post('/register/employee', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, firstName, lastName, department, position } = req.body;
+    
+    // Create user document
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password: hashedPassword, role: 'employee' });
+    const user = new User({ 
+      name, 
+      email, 
+      password: hashedPassword, 
+      role: 'employee' 
+    });
     await user.save();
-    responseHandler.success(res, null, 'Employee registered successfully', statusCodes.CREATED);
+
+    // Create employee document
+    const employee = new Employee({
+      name,
+      email,
+      department,
+      position,
+      userId: user._id
+    });
+    await employee.save();
+
+    responseHandler.success(res, {
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      },
+      employee: {
+        id: employee._id,
+        name: employee.name,
+        email: employee.email,
+        department: employee.department,
+        position: employee.position,
+        userId: employee.userId
+      }
+    }, 'Employee registered successfully', statusCodes.CREATED);
   } catch (error) {
     responseHandler.error(res, 'Email already registered', statusCodes.BAD_REQUEST);
   }

@@ -27,19 +27,23 @@ const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 const LeaveHistoryScreen = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const token = useSelector((state: RootState) => state.auth.token);
-  const [leaveBalances, setLeaveBalances] = useState<any>({ casual: {}, sick: {}, annual: {} });
+  const [leaveBalances, setLeaveBalances] = useState<any[]>([]);
   const [leaveHistory, setLeaveHistory] = useState<any[]>([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
   useEffect(() => {
-    if (user?.employee?.id && token) {
-      leaveAPI.getLeaveBalance(user.employee.id, token).then(setLeaveBalances);
+    if (user?.id && token) {
+      leaveAPI.getLeaveBalance(user.id, token).then(setLeaveBalances);
       const safeMonth = Math.max(1, Math.min(Number(selectedMonth) + 1, 12));
       console.log('Selected month (0-based):', selectedMonth, 'Sent to API:', safeMonth);
-      leaveAPI.getLeaveHistory(user.employee.id, token, safeMonth, selectedYear).then(setLeaveHistory);
+      leaveAPI.getLeaveHistory(user.id, token, safeMonth, selectedYear).then(setLeaveHistory);
     }
   }, [user, token, selectedMonth, selectedYear]);
+
+  const getLeaveBalance = (type: string) => {
+    return leaveBalances.find(balance => balance.type === type) || { total: 0, used: 0, remaining: 0 };
+  };
 
   const markedDates = leaveHistory.reduce((acc: { [key: string]: { marked: boolean; dotColor: string } }, leave) => {
     const start = new Date(leave.startDate);
@@ -86,28 +90,28 @@ const LeaveHistoryScreen = () => {
           <Card style={styles.balanceCard}>
             <Card.Content>
               <Text style={styles.balanceTitle}>Casual Leave</Text>
-              <Text style={styles.balanceValue}>{leaveBalances.casual?.available ?? '-'} days</Text>
+              <Text style={styles.balanceValue}>{getLeaveBalance('casual').remaining}</Text>
               <Text style={styles.balanceSubtext}>Available</Text>
-              <Text style={styles.consumedText}>Consumed: {leaveBalances.casual?.consumed ?? '-'}</Text>
-              <Text style={styles.totalText}>Total: {leaveBalances.casual?.total ?? '-'}</Text>
+              <Text style={styles.consumedText}>Used: {getLeaveBalance('casual').used}</Text>
+              <Text style={styles.totalText}>Total: {getLeaveBalance('casual').total}</Text>
             </Card.Content>
           </Card>
           <Card style={styles.balanceCard}>
             <Card.Content>
               <Text style={styles.balanceTitle}>Sick Leave</Text>
-              <Text style={styles.balanceValue}>{leaveBalances.sick?.available ?? '-'} days</Text>
+              <Text style={styles.balanceValue}>{getLeaveBalance('sick').remaining}</Text>
               <Text style={styles.balanceSubtext}>Available</Text>
-              <Text style={styles.consumedText}>Consumed: {leaveBalances.sick?.consumed ?? '-'}</Text>
-              <Text style={styles.totalText}>Total: {leaveBalances.sick?.total ?? '-'}</Text>
+              <Text style={styles.consumedText}>Used: {getLeaveBalance('sick').used}</Text>
+              <Text style={styles.totalText}>Total: {getLeaveBalance('sick').total}</Text>
             </Card.Content>
           </Card>
           <Card style={styles.balanceCard}>
             <Card.Content>
               <Text style={styles.balanceTitle}>Annual Leave</Text>
-              <Text style={styles.balanceValue}>{leaveBalances.annual?.available ?? '-'} days</Text>
+              <Text style={styles.balanceValue}>{getLeaveBalance('annual').remaining}</Text>
               <Text style={styles.balanceSubtext}>Available</Text>
-              <Text style={styles.consumedText}>Consumed: {leaveBalances.annual?.consumed ?? '-'}</Text>
-              <Text style={styles.totalText}>Total: {leaveBalances.annual?.total ?? '-'}</Text>
+              <Text style={styles.consumedText}>Used: {getLeaveBalance('annual').used}</Text>
+              <Text style={styles.totalText}>Total: {getLeaveBalance('annual').total}</Text>
             </Card.Content>
           </Card>
         </View>

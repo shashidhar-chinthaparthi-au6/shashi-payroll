@@ -1,65 +1,100 @@
 const express = require('express');
 const router = express.Router();
 const Attendance = require('../models/Attendance');
-const Employee = require('../models/Employee');
-const Shop = require('../models/Shop');
+const User = require('../models/User');
 const { verifyToken, checkRole } = require('../middleware/auth');
+const { getTodayDateRange } = require('../utils/dateUtils');
 
-// Helper function to get today's date range
-const getTodayDateRange = () => {
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-  return { today, tomorrow };
+// Helper function to format date
+const formatDate = (date) => {
+  if (!date) return null;
+  try {
+    return new Date(date).toISOString();
+  } catch (error) {
+    console.error('Date formatting error:', error);
+    return null;
+  }
+};
+
+// Helper function to validate date
+const isValidDate = (date) => {
+  if (!date) return false;
+  const parsedDate = new Date(date);
+  return !isNaN(parsedDate.getTime());
+};
+
+// Helper function to validate attendance status
+const validateAttendanceStatus = (status, checkIn, checkOut) => {
+  if (status === 'present') {
+    if (!checkIn || !checkIn.time) {
+      return false;
+    }
+  }
+  if (status === 'absent') {
+    if (checkIn || checkOut) {
+      return false;
+    }
+  }
+  if (status === 'half-day') {
+    if (!checkIn || !checkIn.time) {
+      return false;
+    }
+  }
+  return true;
 };
 
 // Manual check-in
 router.post('/check-in', verifyToken, async (req, res) => {
   try {
-    const { employeeId, shopId } = req.body;
-    console.log('Check-in request:', { employeeId, shopId });
-    // Validate employee and shop
-    const employee = await Employee.findById(employeeId);
-    console.log('Employee found:', employee ? 'yes' : 'no');
-    const shop = await Shop.findById(shopId);
-    console.log('Shop found:', shop ? 'yes' : 'no');
-    
-    if (!employee || !shop) {
-      return res.status(404).json({ message: 'Employee or shop not found' });
-    }
+    const userId = req.userId;
+    console.log('Check-in request:', { userId });
 
     // Check if already checked in today
     const { today, tomorrow } = getTodayDateRange();
     console.log('Date range for check-in:', { today, tomorrow });
     
     const existingAttendance = await Attendance.findOne({
-      employee: employeeId,
+      userId,
       date: {
         $gte: today,
         $lt: tomorrow
       }
     });
-    console.log('Existing attendance:', existingAttendance ? 'yes' : 'no');
+
     if (existingAttendance) {
-      console.log('Already checked in today');
       return res.status(400).json({ message: 'Already checked in today' });
     }
-    console.log('Creating new attendance record');
-    // Only set checkIn, do NOT set checkOut
+
+    const checkInTime = new Date();
     const attendance = new Attendance({
-      employee: employeeId,
-      shop: shopId,
+      userId,
       date: today,
       checkIn: {
-        time: new Date(),
+        time: checkInTime,
         method: 'manual'
-      }
+      },
+      status: 'present'
     });
 
     await attendance.save();
-    // console.log('Created attendance:', attendance);
-    res.status(201).json(attendance);
+    console.log(attendance);
+    // Format the response
+    const formattedAttendance = {
+      id: attendance._id,
+      date: formatDate(attendance.date),
+      checkIn: attendance.checkIn ? {
+        time: formatDate(attendance.checkIn.time),
+        method: attendance.checkIn.method
+      } : null,
+      checkOut: attendance.checkOut ? {
+        time: formatDate(attendance.checkOut.time),
+        method: attendance.checkOut.method
+      } : null,
+      status: attendance.status,
+      user: null // Will be populated if needed
+    };
+
+    res.status(201).json(formattedAttendance);
   } catch (error) {
     console.error('Check-in error:', error);
     res.status(500).json({ message: error.message });
@@ -69,21 +104,19 @@ router.post('/check-in', verifyToken, async (req, res) => {
 // QR code check-in
 router.post('/qr-check-in', verifyToken, async (req, res) => {
   try {
-    const { employeeId, shopId } = req.body;
+    const { userId } = req.body;
     
-    // Validate employee and shop
-    const employee = await Employee.findById(employeeId);
-    const shop = await Shop.findById(shopId);
-    
-    if (!employee || !shop) {
-      return res.status(404).json({ message: 'Employee or shop not found' });
+    // Validate user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Check if already checked in today
     const { today, tomorrow } = getTodayDateRange();
     
     const existingAttendance = await Attendance.findOne({
-      employee: employeeId,
+      userId,
       date: {
         $gte: today,
         $lt: tomorrow
@@ -94,18 +127,40 @@ router.post('/qr-check-in', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Already checked in today' });
     }
 
+    const checkInTime = new Date();
     const attendance = new Attendance({
-      employee: employeeId,
-      shop: shopId,
+      userId,
       date: today,
       checkIn: {
-        time: new Date(),
+        time: checkInTime,
         method: 'qr'
-      }
+      },
+      status: 'present',
+      checkOut: null // Explicitly set checkOut to null
     });
 
     await attendance.save();
-    res.status(201).json(attendance);
+
+    // Format the response
+    const formattedAttendance = {
+      id: attendance._id,
+      date: formatDate(attendance.date),
+      checkIn: attendance.checkIn ? {
+        time: formatDate(attendance.checkIn.time),
+        method: attendance.checkIn.method
+      } : null,
+      checkOut: attendance.checkOut ? {
+        time: formatDate(attendance.checkOut.time),
+        method: attendance.checkOut.method
+      } : null,
+      status: attendance.status,
+      user: {
+        name: user.name,
+        email: user.email
+      }
+    };
+
+    res.status(201).json(formattedAttendance);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -114,38 +169,21 @@ router.post('/qr-check-in', verifyToken, async (req, res) => {
 // Check-out
 router.post('/check-out', verifyToken, async (req, res) => {
   try {
-    const { employeeId, method = 'manual' } = req.body;
-    console.log('Check-out request:', { employeeId, method });
-    
-    // Validate employee
-    const employee = await Employee.findById(employeeId);
-    console.log('Found employee:', employee ? 'yes' : 'no');
-    
-    if (!employee) {
-      return res.status(404).json({ message: 'Employee not found' });
-    }
+    const userId = req.userId;
+    const { method = 'manual' } = req.body;
+    console.log('Check-out request:', { userId, method });
     
     const { today, tomorrow } = getTodayDateRange();
     console.log('Date range for check-out:', { today, tomorrow });
     
-    // Find attendance record using employeeId (which could be string or ObjectId)
+    // Find attendance record using userId
     const attendance = await Attendance.findOne({
-      employee: employeeId,
+      userId,
       date: {
         $gte: today,
         $lt: tomorrow
       }
     });
-
-    console.log('Found attendance:', attendance ? 'yes' : 'no');
-    if (attendance) {
-      console.log('Attendance details:', {
-        hasCheckOut: !!attendance.checkOut,
-        employee: attendance.employee.toString(),
-        date: attendance.date,
-        checkIn: attendance.checkIn
-      });
-    }
 
     if (!attendance) {
       return res.status(404).json({ message: 'No check-in found for today' });
@@ -155,27 +193,51 @@ router.post('/check-out', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Already checked out today' });
     }
 
+    if (!attendance.checkIn || !attendance.checkIn.time) {
+      return res.status(400).json({ message: 'Invalid attendance record: missing check-in time' });
+    }
+
+    const checkOutTime = new Date();
     attendance.checkOut = {
-      time: new Date(),
+      time: checkOutTime,
       method
     };
 
     await attendance.save();
-    console.log('Updated attendance:', attendance);
-    res.json(attendance);
+
+    // Format the response
+    const formattedAttendance = {
+      id: attendance._id,
+      date: formatDate(attendance.date),
+      checkIn: attendance.checkIn ? {
+        time: formatDate(attendance.checkIn.time),
+        method: attendance.checkIn.method
+      } : null,
+      checkOut: attendance.checkOut ? {
+        time: formatDate(attendance.checkOut.time),
+        method: attendance.checkOut.method
+      } : null,
+      status: attendance.status,
+      user: null // Will be populated if needed
+    };
+
+    res.json(formattedAttendance);
   } catch (error) {
     console.error('Check-out error:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get attendance logs for an employee
-router.get('/employee/:employeeId', verifyToken, async (req, res) => {
+// Get attendance logs for a user
+router.get('/user/:userId', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const query = { employee: req.params.employeeId };
+    const query = { userId: req.params.userId };
 
     if (startDate && endDate) {
+      if (!isValidDate(startDate) || !isValidDate(endDate)) {
+        return res.status(400).json({ message: 'Invalid date format' });
+      }
       query.date = {
         $gte: new Date(startDate),
         $lte: new Date(endDate)
@@ -184,97 +246,131 @@ router.get('/employee/:employeeId', verifyToken, async (req, res) => {
 
     const attendance = await Attendance.find(query)
       .sort({ date: -1 })
-      .populate('shop', 'name')
-      .populate('employee', 'firstName lastName');
+      .populate('userId', 'name email');
 
-    res.json(attendance);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+    // Format the response
+    const formattedAttendance = attendance.map(record => {
+      // Validate attendance record
+      if (!validateAttendanceStatus(record.status, record.checkIn, record.checkOut)) {
+        console.warn('Invalid attendance record:', record._id);
+      }
 
-// Get attendance logs for a shop (admin or shop owner)
-router.get('/shop/:shopId', verifyToken, checkRole(['admin', 'client']), async (req, res) => {
-  try {
-    console.log('Shop attendance request:', {
-      shopId: req.params.shopId,
-      userId: req.userId,
-      role: req.userRole
+      // Ensure checkIn and checkOut are properly formatted
+      const formattedRecord = {
+        id: record._id,
+        date: formatDate(record.date),
+        checkIn: null,
+        checkOut: null,
+        status: record.status,
+        user: record.userId ? {
+          name: record.userId.name,
+          email: record.userId.email
+        } : null
+      };
+
+      // Handle checkIn
+      if (record.checkIn) {
+        if (typeof record.checkIn === 'string') {
+          // Convert string to object format
+          formattedRecord.checkIn = {
+            time: formatDate(record.checkIn),
+            method: 'manual' // Default to manual if method is missing
+          };
+        } else if (record.checkIn.time) {
+          formattedRecord.checkIn = {
+            time: formatDate(record.checkIn.time),
+            method: record.checkIn.method || 'manual'
+          };
+        }
+      }
+
+      // Handle checkOut
+      if (record.checkOut) {
+        if (typeof record.checkOut === 'string') {
+          // Convert string to object format
+          formattedRecord.checkOut = {
+            time: formatDate(record.checkOut),
+            method: 'manual' // Default to manual if method is missing
+          };
+        } else if (record.checkOut.time) {
+          formattedRecord.checkOut = {
+            time: formatDate(record.checkOut.time),
+            method: record.checkOut.method || 'manual'
+          };
+        }
+      }
+
+      return formattedRecord;
     });
 
-    // If client, verify shop ownership
-    if (req.userRole === 'client') {
-      const shop = await Shop.findById(req.params.shopId);
-      if (!shop) {
-        return res.status(404).json({ message: 'Shop not found' });
-      }
-      if (shop.owner.toString() !== req.userId) {
-        return res.status(403).json({ message: 'Access denied' });
-      }
-    }
-
-    const { startDate, endDate } = req.query;
-    const query = { shop: req.params.shopId };
-
-    if (startDate && endDate) {
-      query.date = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
-      };
-    }
-
-    const attendance = await Attendance.find(query)
-      .sort({ date: -1 })
-      .populate('employee', 'firstName lastName')
-      .populate('shop', 'name');
-
-    console.log('Found attendance records:', attendance.length);
-
-    if (!attendance || attendance.length === 0) {
-      return res.status(404).json({ message: 'No attendance records found for this shop' });
-    }
-
-    res.json(attendance);
+    res.json(formattedAttendance);
   } catch (error) {
-    console.error('Shop attendance error:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get employee's attendance records
-router.get('/employee', verifyToken, checkRole(['employee']), async (req, res) => {
+// Get user's attendance records
+router.get('/user', verifyToken, checkRole(['employee']), async (req, res) => {
   try {
-    // Find the employee document for the logged-in user
     const userId = req.userId;
-    const employee = await Employee.findOne({ userId: userId });
-    if (!employee) {
-      return res.status(404).json({ error: 'Employee record not found for this user' });
-    }
+    const { today, tomorrow } = getTodayDateRange();
 
-    // Use the employee's _id to find attendance records
-    const attendance = await Attendance.find({ employee: employee._id })
+    // Get today's attendance
+    const todayAttendance = await Attendance.findOne({
+      userId,
+      date: {
+        $gte: today,
+        $lt: tomorrow
+      }
+    });
+
+    // Get recent attendance history
+    const attendanceHistory = await Attendance.find({ userId })
       .sort({ date: -1 })
       .limit(30)
       .lean();
 
-    // Format the response as needed
-    const formattedAttendance = attendance.map(record => ({
-      date: record.date,
-      checkIn: record.checkIn ? {
-        time: record.checkIn.time.toISOString(),
-        method: record.checkIn.method
-      } : null,
-      checkOut: record.checkOut ? {
-        time: record.checkOut.time.toISOString(),
-        method: record.checkOut.method
-      } : null,
-      status: record.status,
-      notes: record.notes
-    }));
+    const formattedAttendance = attendanceHistory.map(record => {
+      // Validate attendance record
+      if (!validateAttendanceStatus(record.status, record.checkIn, record.checkOut)) {
+        console.warn('Invalid attendance record:', record._id);
+      }
 
-    res.json(formattedAttendance);
+      return {
+        id: record._id,
+        date: formatDate(record.date),
+        checkIn: record.checkIn ? {
+          time: formatDate(record.checkIn.time),
+          method: record.checkIn.method
+        } : null,
+        checkOut: record.checkOut ? {
+          time: formatDate(record.checkOut.time),
+          method: record.checkOut.method
+        } : null,
+        status: record.status,
+        notes: record.notes
+      };
+    });
+
+    res.json({
+      today: todayAttendance ? {
+        id: todayAttendance._id,
+        date: formatDate(todayAttendance.date),
+        checkIn: todayAttendance.checkIn ? {
+          time: formatDate(todayAttendance.checkIn.time),
+          method: todayAttendance.checkIn.method
+        } : null,
+        checkOut: todayAttendance.checkOut ? {
+          time: formatDate(todayAttendance.checkOut.time),
+          method: todayAttendance.checkOut.method
+        } : null,
+        status: todayAttendance.status,
+        notes: todayAttendance.notes
+      } : null,
+      history: formattedAttendance
+    });
   } catch (error) {
-    console.error('Error fetching employee attendance:', error);
+    console.error('Error fetching user attendance:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -292,8 +388,8 @@ function getWorkingDays(year, month) {
   return days;
 }
 
-// Get monthly attendance summary for an employee
-router.get('/monthly-summary/:employeeId', verifyToken, async (req, res) => {
+// Get monthly attendance summary for a user
+router.get('/monthly-summary/:userId', verifyToken, async (req, res) => {
   try {
     let { month, year } = req.query;
     month = parseInt(month);
@@ -306,9 +402,9 @@ router.get('/monthly-summary/:employeeId', verifyToken, async (req, res) => {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-    // 1. Get all attendance records for the employee in the month
+    // 1. Get all attendance records for the user in the month
     const attendance = await Attendance.find({
-      employeeId: req.params.employeeId,
+      userId: req.params.userId,
       date: { $gte: startDate, $lte: endDate }
     });
 
@@ -318,17 +414,17 @@ router.get('/monthly-summary/:employeeId', verifyToken, async (req, res) => {
     // 3. Map attendance by date (YYYY-MM-DD)
     const attendanceMap = {};
     attendance.forEach(a => {
-      const day = a.date.toISOString().split('T')[0];
+      const day = formatDate(a.date).split('T')[0];
       attendanceMap[day] = a;
     });
 
     let present = 0, leave = 0, absent = 0;
     workingDays.forEach(day => {
-      const dayStr = day.toISOString().split('T')[0];
+      const dayStr = formatDate(day).split('T')[0];
       const record = attendanceMap[dayStr];
       if (record) {
         if (record.status === 'leave') leave++;
-        else if (record.status === 'present' && record.checkIn && record.checkOut) present++;
+        else if (record.status === 'present' && record.checkIn && record.checkIn.time) present++;
       } else {
         absent++;
       }
@@ -349,13 +445,16 @@ router.get('/monthly-summary/:employeeId', verifyToken, async (req, res) => {
   }
 });
 
-// Get detailed attendance history for an employee
-router.get('/history/:employeeId', verifyToken, async (req, res) => {
+// Get detailed attendance history for a user
+router.get('/history/:userId', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const query = { employeeId: req.params.employeeId };
+    const query = { userId: req.params.userId };
 
     if (startDate && endDate) {
+      if (!isValidDate(startDate) || !isValidDate(endDate)) {
+        return res.status(400).json({ message: 'Invalid date format' });
+      }
       query.date = {
         $gte: new Date(startDate),
         $lte: new Date(endDate)
@@ -364,29 +463,29 @@ router.get('/history/:employeeId', verifyToken, async (req, res) => {
 
     const attendance = await Attendance.find(query)
       .sort({ date: -1 })
-      .populate('shop', 'name')
-      .populate('employeeId', 'firstName lastName');
+      .populate('userId', 'name email');
 
     // Format the response
     const formattedAttendance = attendance.map(record => {
-      // Format checkIn and checkOut as objects with a time property
-      const checkInObj = record.checkIn
-        ? { time: new Date(record.checkIn).toTimeString().split(' ')[0] }
-        : null;
-      const checkOutObj = record.checkOut
-        ? { time: new Date(record.checkOut).toTimeString().split(' ')[0] }
-        : null;
-
+      // Validate attendance record
+      if (!validateAttendanceStatus(record.status, record.checkIn, record.checkOut)) {
+        console.warn('Invalid attendance record:', record._id);
+      }
+console.log(record);
       return {
         id: record._id,
-        date: record.date.toISOString().split('T')[0],
-        checkIn: checkInObj,
-        checkOut: checkOutObj,
+        date: formatDate(record.date),
+        checkIn: record.checkIn ? {
+          time: formatDate(record.checkIn)
+        } : null,
+        checkOut: record.checkOut ? {
+          time: formatDate(record.checkOut.time),
+          method: record.checkOut.method
+        } : null,
         status: record.status,
-        shop: record.shop?.name,
-        employee: record.employeeId ? {
-          firstName: record.employeeId.firstName,
-          lastName: record.employeeId.lastName
+        user: record.userId ? {
+          name: record.userId.name,
+          email: record.userId.email
         } : null
       };
     });

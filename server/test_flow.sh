@@ -3,145 +3,161 @@
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
-NC='\033[0m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-echo "Starting API test flow..."
+# API URL
+API_URL="http://localhost:5000/api"
 
-# 1. Register Admin
-echo -e "\n${GREEN}1. Registering Admin...${NC}"
-ADMIN_RESPONSE=$(curl -v -X POST http://localhost:3000/api/auth/register/admin \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Admin","email":"admin@example.com","password":"password"}')
-echo $ADMIN_RESPONSE
+# Function to print section headers
+print_header() {
+    echo -e "\n${BLUE}=== $1 ===${NC}\n"
+}
 
-# 2. Register Client
-echo -e "\n${GREEN}2. Registering Client...${NC}"
-CLIENT_RESPONSE=$(curl -v -X POST http://localhost:3000/api/auth/register/client \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Client","email":"client@example.com","password":"password"}')
-echo $CLIENT_RESPONSE
+# Function to make API calls and handle responses
+make_request() {
+    local method=$1
+    local endpoint=$2
+    local data=$3
+    local token=$4
 
-# 3. Login Admin
-echo -e "\n${GREEN}3. Logging in Admin...${NC}"
-ADMIN_LOGIN_RESPONSE=$(curl -v -X POST http://localhost:3000/api/auth/login/admin \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"password"}')
-echo $ADMIN_LOGIN_RESPONSE
+    if [ -z "$token" ]; then
+        response=$(curl -s -X $method "$API_URL$endpoint" \
+            -H "Content-Type: application/json" \
+            -d "$data" \
+            -w "\n%{http_code}")
+    else
+        response=$(curl -s -X $method "$API_URL$endpoint" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $token" \
+            -d "$data" \
+            -w "\n%{http_code}")
+    fi
 
-# Extract admin token
-ADMIN_TOKEN=$(echo $ADMIN_LOGIN_RESPONSE | grep -o '"token":"[^"]*' | cut -d'"' -f4)
-echo "Admin Token: $ADMIN_TOKEN"
+    # Split response into body and status code
+    local body=$(echo "$response" | sed '$d')
+    local status_code=$(echo "$response" | tail -n1)
 
-# 4. Login Client
-echo -e "\n${GREEN}4. Logging in Client...${NC}"
-CLIENT_LOGIN_RESPONSE=$(curl -v -X POST http://localhost:3000/api/auth/login/client \
-  -H "Content-Type: application/json" \
-  -d '{"email":"client@example.com","password":"password"}')
-echo $CLIENT_LOGIN_RESPONSE
+    # Print status code for debugging
+    echo "Status Code: $status_code"
+    echo "$body"
+}
 
-# Extract client token
-CLIENT_TOKEN=$(echo $CLIENT_LOGIN_RESPONSE | grep -o '"token":"[^"]*' | cut -d'"' -f4)
-echo "Client Token: $CLIENT_TOKEN"
+# Function to extract value from JSON response
+extract_value() {
+    local json=$1
+    local key=$2
+    echo "$json" | grep -o "\"$key\":\"[^\"]*\"" | cut -d'"' -f4
+}
 
-# 5. Create a new shop (as client)
-echo -e "\n${GREEN}5. Creating a new shop...${NC}"
-SHOP_RESPONSE=$(curl -v -X POST http://localhost:3000/api/shops \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $CLIENT_TOKEN" \
-  -d '{
-    "name": "Test Shop",
-    "address": {
-      "street": "123 Test St",
-      "city": "Test City",
-      "state": "TS",
-      "zipCode": "12345"
-    },
-    "phone": "1234567890",
-    "email": "testshop@example.com"
-  }')
-echo $SHOP_RESPONSE
+# Function to extract token from login response
+extract_token() {
+    local json=$1
+    echo "$json" | grep -o "\"token\":\"[^\"]*\"" | cut -d'"' -f4
+}
 
-# Extract shop ID
-SHOP_ID=$(echo $SHOP_RESPONSE | grep -o '"_id":"[^"]*' | cut -d'"' -f4)
-echo "Shop ID: $SHOP_ID"
+# Function to extract user ID from response
+extract_user_id() {
+    local json=$1
+    echo "$json" | grep -o "\"id\":\"[^\"]*\"" | cut -d'"' -f4
+}
 
-# 6. Create a new employee
-echo -e "\n${GREEN}6. Creating a new employee...${NC}"
-EMPLOYEE_RESPONSE=$(curl -v -X POST http://localhost:3000/api/employees \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $CLIENT_TOKEN" \
-  -d '{
-    "firstName": "John",
-    "lastName": "Doe",
-    "email": "john.doe@example.com",
-    "phone": "1234567890",
-    "position": "Manager",
-    "shop": "'$SHOP_ID'",
-    "dailySalary": 1000
-  }')
-echo $EMPLOYEE_RESPONSE
+# Function to check if response contains success
+check_success() {
+    local response=$1
+    if [[ $response == *"success\":true"* ]] || [[ $response == *"\"message\":\"OK\""* ]]; then
+        echo -e "${GREEN}Success${NC}"
+        return 0
+    else
+        echo -e "${RED}Failed${NC}"
+        echo "Response: $response"
+        return 1
+    fi
+}
 
-# Extract employee ID
-EMPLOYEE_ID=$(echo $EMPLOYEE_RESPONSE | grep -o '"_id":"[^"]*' | cut -d'"' -f4)
-echo "Employee ID: $EMPLOYEE_ID"
+# Start testing flow
+echo -e "${BLUE}Starting Employee Journey Test Flow${NC}"
 
-# 7. Manual check-in
-echo -e "\n${GREEN}7. Performing manual check-in...${NC}"
-CHECKIN_RESPONSE=$(curl -v -X POST http://localhost:3000/api/attendance/check-in \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $CLIENT_TOKEN" \
-  -d '{
-    "employeeId": "'$EMPLOYEE_ID'",
-    "shopId": "'$SHOP_ID'"
-  }')
-echo $CHECKIN_RESPONSE
+# Check server health
+print_header "0. Server Health Check"
+health_response=$(curl -s http://localhost:5000/health)
+if [[ $health_response == *"OK"* ]]; then
+    echo -e "${GREEN}Server is healthy${NC}"
+else
+    echo -e "${RED}Server is not responding${NC}"
+    echo "Response: $health_response"
+    exit 1
+fi
 
-# 8. Check-out
-echo -e "\n${GREEN}8. Performing check-out...${NC}"
-CHECKOUT_RESPONSE=$(curl -v -X POST http://localhost:3000/api/attendance/check-out \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $CLIENT_TOKEN" \
-  -d '{
-    "employeeId": "'$EMPLOYEE_ID'",
-    "method": "manual"
-  }')
-echo $CHECKOUT_RESPONSE
+# 1. Register Employee
+print_header "1. Employee Registration"
+register_data="{\"name\":\"Test Employee\",\"email\":\"test.employee@example.com\",\"password\":\"Test@123\",\"firstName\":\"Test\",\"lastName\":\"Employee\",\"department\":\"IT\",\"position\":\"Software Engineer\"}"
+register_response=$(make_request "POST" "/auth/register/employee" "$register_data")
+check_success "$register_response"
+user_id=$(extract_user_id "$register_response")
+echo "User ID: $user_id"
 
-# 9. Generate monthly payroll
-echo -e "\n${GREEN}9. Generating monthly payroll...${NC}"
-PAYROLL_RESPONSE=$(curl -v -X POST http://localhost:3000/api/payroll/generate/$SHOP_ID \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $CLIENT_TOKEN" \
-  -d '{
-    "month": 3,
-    "year": 2024
-  }')
-echo $PAYROLL_RESPONSE
+# 2. Login
+print_header "2. Employee Login"
+login_data="{\"email\":\"test.employee@example.com\",\"password\":\"Test@123\"}"
+login_response=$(make_request "POST" "/auth/login" "$login_data")
+check_success "$login_response"
+token=$(extract_token "$login_response")
+echo "Token: $token"
 
-# Extract payroll ID
-PAYROLL_ID=$(echo $PAYROLL_RESPONSE | grep -o '"_id":"[^"]*' | cut -d'"' -f4)
-echo "Payroll ID: $PAYROLL_ID"
+# 3. Get Dashboard Data
+print_header "3. Get Dashboard Data"
+dashboard_response=$(make_request "GET" "/home/dashboard/$user_id" "" "$token")
+check_success "$dashboard_response"
 
-# 10. Generate payslip
-echo -e "\n${GREEN}10. Generating payslip...${NC}"
-PAYSLIP_RESPONSE=$(curl -v -X POST http://localhost:3000/api/payslips/generate \
-  -H "Authorization: Bearer $CLIENT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "employeeId": "'$EMPLOYEE_ID'",
-    "month": 3,
-    "year": 2024
-  }')
-echo $PAYSLIP_RESPONSE
+# 4. Mark Attendance
+print_header "4. Mark Attendance"
+attendance_data="{\"userId\":\"$user_id\"}"
+attendance_response=$(make_request "POST" "/home/attendance/check-in" "$attendance_data" "$token")
+check_success "$attendance_response"
 
-# Extract payslip ID
-PAYSLIP_ID=$(echo $PAYSLIP_RESPONSE | grep -o '"_id":"[^"]*' | cut -d'"' -f4)
-echo "Payslip ID: $PAYSLIP_ID"
+# 5. Request Leave
+print_header "5. Request Leave"
+leave_data="{\"userId\":\"$user_id\",\"type\":\"casual\",\"startDate\":\"$(date -v+1d +%Y-%m-%d)\",\"endDate\":\"$(date -v+2d +%Y-%m-%d)\",\"reason\":\"Family function\"}"
+leave_response=$(make_request "POST" "/leave/request" "$leave_data" "$token")
+check_success "$leave_response"
 
-# 11. Approve payslip
-echo -e "\n${GREEN}11. Approving payslip...${NC}"
-APPROVE_RESPONSE=$(curl -v -X POST http://localhost:3000/api/payslips/$PAYSLIP_ID/approve \
-  -H "Authorization: Bearer $CLIENT_TOKEN")
-echo $APPROVE_RESPONSE
+# 6. Get Leave Balance
+print_header "6. Get Leave Balance"
+leave_balance_response=$(make_request "GET" "/leave/balance/$user_id" "" "$token")
+check_success "$leave_balance_response"
 
-echo -e "\n${GREEN}Test flow completed!${NC}" 
+# 7. Get Leave History
+print_header "7. Get Leave History"
+leave_history_response=$(make_request "GET" "/leave/history/$user_id" "" "$token")
+check_success "$leave_history_response"
+
+# 8. Get Attendance History
+print_header "8. Get Attendance History"
+current_month=$(date +%m)
+current_year=$(date +%Y)
+attendance_history_response=$(make_request "GET" "/attendance/employee/$user_id?startDate=$current_year-$current_month-01&endDate=$current_year-$current_month-31" "" "$token")
+check_success "$attendance_history_response"
+
+# 9. Get Monthly Attendance Summary
+print_header "9. Get Monthly Attendance Summary"
+attendance_summary_response=$(make_request "GET" "/attendance/monthly-summary/$user_id?month=$current_month&year=$current_year" "" "$token")
+check_success "$attendance_summary_response"
+
+# 10. Get Payslips
+print_header "10. Get Payslips"
+payslips_response=$(make_request "GET" "/payslips/employee/$user_id" "" "$token")
+check_success "$payslips_response"
+
+# 11. Check Out
+print_header "11. Check Out"
+checkout_data="{\"userId\":\"$user_id\"}"
+checkout_response=$(make_request "POST" "/home/attendance/check-out" "$checkout_data" "$token")
+check_success "$checkout_response"
+
+# 12. Get Notifications
+print_header "12. Get Notifications"
+notifications_response=$(make_request "GET" "/notifications/$user_id" "" "$token")
+check_success "$notifications_response"
+
+echo -e "\n${GREEN}Test Flow Completed${NC}" 

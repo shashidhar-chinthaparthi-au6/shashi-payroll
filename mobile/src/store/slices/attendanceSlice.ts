@@ -10,9 +10,9 @@ const initialState: AttendanceState = {
 
 export const markAttendance = createAsyncThunk(
   'attendance/mark',
-  async ({ employeeId, shopId }: { employeeId: string; shopId: string }, { rejectWithValue }) => {
+  async (userId: string, { rejectWithValue }) => {
     try {
-      const response = await attendanceAPI.markAttendance({ employeeId, shopId });
+      const response = await attendanceAPI.markAttendance(userId);
       return response;
     } catch (error: any) {
       console.error('Attendance error:', error.message);

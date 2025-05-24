@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 
 const payslipSchema = new mongoose.Schema({
-  employeeId: {
-    type: String,
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
   },
   month: {
@@ -20,49 +21,47 @@ const payslipSchema = new mongoose.Schema({
     required: true
   },
   allowances: [{
-    name: String,
-    amount: Number
+    type: {
+      type: String,
+      required: true
+    },
+    amount: {
+      type: Number,
+      required: true
+    }
   }],
   deductions: [{
-    name: String,
-    amount: Number
+    type: {
+      type: String,
+      required: true
+    },
+    amount: {
+      type: Number,
+      required: true
+    }
   }],
   netSalary: {
     type: Number,
     required: true
   },
   attendance: {
-    present: Number,
-    absent: Number,
-    late: Number,
-    halfDay: Number
+    present: { type: Number, default: 0 },
+    absent: { type: Number, default: 0 },
+    late: { type: Number, default: 0 },
+    halfDay: { type: Number, default: 0 }
   },
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending'
   },
-  generatedAt: {
-    type: Date,
-    default: Date.now
-  },
-  approvedAt: {
-    type: Date
-  },
-  approvedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  pdfUrl: {
-    type: String
-  }
-}, {
-  timestamps: true
-});
+  generatedAt: { type: Date, default: Date.now },
+  approvedAt: { type: Date },
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  pdfUrl: { type: String }
+}, { timestamps: true });
 
-// Compound index to ensure unique payslip per employee per month/year
-payslipSchema.index({ employeeId: 1, month: 1, year: 1 }, { unique: true });
+// Indexes for faster queries
+payslipSchema.index({ userId: 1, month: 1, year: 1 }, { unique: true });
 
-const Payslip = mongoose.model('Payslip', payslipSchema);
-
-module.exports = Payslip; 
+module.exports = mongoose.model('Payslip', payslipSchema); 

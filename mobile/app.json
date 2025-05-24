@@ -17,21 +17,21 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yourcompany.payrollapp",
-      "infoPlist": {
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
-        }
-      }
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.yourcompany.payrollapp"
+      "package": "com.yourcompany.payrollapp",
+      "versionCode": 1
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    }
+    "extra": {
+      "eas": {
+        "projectId": "df428d4d-fb70-4055-979c-e2fc5092c2e1"
+      }
+    },
+    "owner": "csspnexus"
   }
 } 
