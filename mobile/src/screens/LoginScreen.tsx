@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
@@ -21,16 +20,54 @@ type RootStackParamList = {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
+interface ValidationErrors {
+  email?: string;
+  password?: string;
+  general?: string;
+}
+
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [touched, setTouched] = useState<{ email: boolean; password: boolean }>({
+    email: false,
+    password: false,
+  });
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<NavigationProp>();
 
+  const validateEmail = (email: string): string | undefined => {
+    if (!email) return 'Email is required';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return 'Please enter a valid email address';
+    return undefined;
+  };
+
+  const validatePassword = (password: string): string | undefined => {
+    if (!password) return 'Password is required';
+    if (password.length < 6) return 'Password must be at least 6 characters';
+    return undefined;
+  };
+
+  const validateForm = (): boolean => {
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+    
+    setErrors({
+      email: emailError,
+      password: passwordError,
+    });
+
+    return !emailError && !passwordError;
+  };
+
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+    setTouched({ email: true, password: true });
+    setErrors({}); // Clear previous errors
+    
+    if (!validateForm()) {
       return;
     }
 
@@ -40,12 +77,35 @@ const LoginScreen = () => {
       console.log('Login successful:', result);
     } catch (error) {
       console.error('Login error:', error);
-      Alert.alert(
-        'Login Failed',
-        error instanceof Error ? error.message : 'Please check your credentials and try again'
-      );
+      let errorMessage = 'Please check your credentials and try again';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('401')) {
+          errorMessage = 'Invalid email or password';
+        } else if (error.message.includes('network')) {
+          errorMessage = 'Network error. Please check your internet connection';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setErrors({ general: errorMessage });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (touched.email) {
+      setErrors(prev => ({ ...prev, email: validateEmail(text) }));
+    }
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    if (touched.password) {
+      setErrors(prev => ({ ...prev, password: validatePassword(text) }));
     }
   };
 
@@ -56,28 +116,37 @@ const LoginScreen = () => {
         <Text style={styles.subtitle}>Sign in to your account</Text>
       </View>
       <View style={styles.form}>
+        {errors.general && (
+          <View style={styles.generalErrorContainer}>
+            <Text style={styles.generalErrorText}>{errors.general}</Text>
+          </View>
+        )}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email Address</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, errors.email && styles.inputError]}
             placeholder="Enter your email"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={handleEmailChange}
+            onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
             keyboardType="email-address"
             autoCapitalize="none"
             editable={!isLoading}
           />
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
         </View>
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Password</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, errors.password && styles.inputError]}
             placeholder="Enter your password"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={handlePasswordChange}
+            onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
             secureTextEntry
             editable={!isLoading}
           />
+          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
         </View>
         <TouchableOpacity 
           style={[styles.button, isLoading && styles.buttonDisabled]} 
@@ -129,6 +198,19 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  generalErrorContainer: {
+    backgroundColor: '#fff5f5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#ff3b30',
+  },
+  generalErrorText: {
+    color: '#ff3b30',
+    fontSize: 14,
+    textAlign: 'center',
+  },
   inputContainer: {
     marginBottom: 20,
   },
@@ -146,6 +228,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     fontSize: 16,
     backgroundColor: '#fafafa',
+  },
+  inputError: {
+    borderColor: '#ff3b30',
+    backgroundColor: '#fff5f5',
+  },
+  errorText: {
+    color: '#ff3b30',
+    fontSize: 12,
+    marginTop: 4,
   },
   button: {
     backgroundColor: '#007AFF',
