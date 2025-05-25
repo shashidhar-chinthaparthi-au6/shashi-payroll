@@ -2,8 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Use your machine's IP address here
-const API_URL = 'https://payroll-server-ne8y.onrender.com/api'; // Updated production API URL
-// const API_URL = 'http://192.168.0.101:5000/api'   // Updated production API URL
+// const API_URL = 'https://payroll-server-ne8y.onrender.com/api'; // Updated production API URL
+const API_URL = 'http://192.168.0.101:5000/api'   // Updated production API URL
 
 const api = axios.create({
   baseURL: API_URL,
@@ -33,6 +33,19 @@ export const authAPI = {
   },
   logout: async () => {
     await AsyncStorage.removeItem('token');
+  },
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    try {
+      const response = await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Change password error:', error);
+      const errorMessage = error.response?.data?.message || 'An unexpected error occurred while changing password';
+      throw new Error(errorMessage);
+    }
   },
 };
 
@@ -146,6 +159,90 @@ export const leaveAPI = {
   getLeaveBalance: async () => {
     const response = await api.get('/leave/balance');
     return response.data;
+  }
+};
+
+export const profileAPI = {
+  getProfile: async () => {
+    try {
+      const response = await api.get('/employees/profile');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching profile:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch profile');
+    }
+  },
+  updateProfile: async (profileData: any) => {
+    try {
+      const response = await api.patch('/employees/profile', profileData);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error updating profile:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to update profile');
+    }
+  },
+  getDocuments: async () => {
+    try {
+      const response = await api.get('/employees/documents');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching documents:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch documents');
+    }
+  },
+  uploadDocument: async (formData: FormData, type: string) => {
+    try {
+      const response = await api.post('/employees/documents', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
+        },
+        transformRequest: (data, headers) => {
+          // Don't transform FormData
+          if (data instanceof FormData) {
+            return data;
+          }
+          return data;
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total!);
+          console.log('Upload progress:', percentCompleted);
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error uploading document:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to upload document');
+    }
+  },
+  downloadDocument: async (documentId: string) => {
+    try {
+      const response = await api.get(`/employees/documents/${documentId}/download`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error downloading document:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to download document');
+    }
+  },
+  getSettings: async () => {
+    try {
+      const response = await api.get('/employees/settings');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching settings:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch settings');
+    }
+  },
+  updateSettings: async (settings: any) => {
+    try {
+      const response = await api.patch('/employees/settings', settings);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error updating settings:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to update settings');
+    }
   }
 };
 

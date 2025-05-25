@@ -9,21 +9,63 @@ import {
   Portal,
   Text,
   Card,
+  TextInput,
+  HelperText,
 } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { authAPI } from '../../services/api';
+
+type SettingsStackParamList = {
+  SettingsMain: undefined;
+  ChangePassword: undefined;
+};
+
+type SettingsScreenNavigationProp = StackNavigationProp<SettingsStackParamList, 'SettingsMain'>;
 
 export const SettingsScreen: React.FC = () => {
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [changePasswordVisible, setChangePasswordVisible] = useState(false);
   const [supportVisible, setSupportVisible] = useState(false);
+  const [changePasswordVisible, setChangePasswordVisible] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const navigation = useNavigation<SettingsScreenNavigationProp>();
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('Please fill in all fields');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError('Password must be at least 6 characters long');
+      return;
+    }
+
     try {
-      // TODO: Implement password change functionality
+      setLoading(true);
+      await authAPI.changePassword(currentPassword, newPassword);
       setChangePasswordVisible(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to change password');
+      setPasswordError(err instanceof Error ? err.message : 'Failed to change password');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -152,15 +194,63 @@ export const SettingsScreen: React.FC = () => {
       <Portal>
         <Dialog
           visible={changePasswordVisible}
-          onDismiss={() => setChangePasswordVisible(false)}
+          onDismiss={() => {
+            setChangePasswordVisible(false);
+            setPasswordError(null);
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+          }}
         >
           <Dialog.Title>Change Password</Dialog.Title>
           <Dialog.Content>
-            <Text>Password change functionality will be implemented here.</Text>
+            {passwordError && (
+              <HelperText type="error" visible={!!passwordError}>
+                {passwordError}
+              </HelperText>
+            )}
+            <TextInput
+              label="Current Password"
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              secureTextEntry
+              style={styles.input}
+              error={!!passwordError}
+            />
+            <TextInput
+              label="New Password"
+              value={newPassword}
+              onChangeText={setNewPassword}
+              secureTextEntry
+              style={styles.input}
+              error={!!passwordError}
+            />
+            <TextInput
+              label="Confirm New Password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              style={styles.input}
+              error={!!passwordError}
+            />
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setChangePasswordVisible(false)}>Cancel</Button>
-            <Button onPress={handleChangePassword}>Change</Button>
+            <Button onPress={() => {
+              setChangePasswordVisible(false);
+              setPasswordError(null);
+              setCurrentPassword('');
+              setNewPassword('');
+              setConfirmPassword('');
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              onPress={handleChangePassword}
+              loading={loading}
+              disabled={loading}
+            >
+              Change
+            </Button>
           </Dialog.Actions>
         </Dialog>
 
@@ -201,5 +291,8 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 16,
     textAlign: 'center',
+  },
+  input: {
+    marginBottom: 12,
   },
 }); 

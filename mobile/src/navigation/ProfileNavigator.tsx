@@ -1,12 +1,15 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { ProfileOverviewScreen } from '../screens/profile/ProfileOverviewScreen';
 import { DocumentManagementScreen } from '../screens/profile/DocumentManagementScreen';
 import { SettingsScreen } from '../screens/profile/SettingsScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { View, Text } from 'react-native';
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
 // Error boundary component
 const ErrorBoundary = ({ children }: { children: React.ReactNode }) => {
@@ -47,6 +50,29 @@ const ErrorBoundary = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const SettingsStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="SettingsMain" 
+        component={SettingsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="ChangePassword" 
+        component={ChangePasswordScreen}
+        options={{ 
+          title: 'Change Password',
+          headerStyle: {
+            backgroundColor: '#fff',
+          },
+          headerTintColor: '#000',
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 export const ProfileNavigator: React.FC = () => {
   return (
     <ErrorBoundary>
@@ -80,7 +106,7 @@ export const ProfileNavigator: React.FC = () => {
         />
         <Tab.Screen
           name="Settings"
-          component={SettingsScreen}
+          component={SettingsStack}
           options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="cog" size={size} color={color} />

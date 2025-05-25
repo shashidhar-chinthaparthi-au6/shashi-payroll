@@ -136,4 +136,64 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Change Password
+router.post('/change-password', verifyToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    console.log('Change password request received for user:', req.userId);
+
+    // Validate request body
+    if (!currentPassword || !newPassword) {
+      console.log('Missing required fields:', { currentPassword: !!currentPassword, newPassword: !!newPassword });
+      return responseHandler.error(res, 'Current password and new password are required', statusCodes.BAD_REQUEST);
+    }
+
+    // Validate password length
+    if (newPassword.length < 6) {
+      console.log('Password too short:', newPassword.length);
+      return responseHandler.error(res, 'New password must be at least 6 characters long', statusCodes.BAD_REQUEST);
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      console.log('User not found:', req.userId);
+      return responseHandler.error(res, 'User not found', statusCodes.NOT_FOUND);
+    }
+
+    try {
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        console.log('Invalid current password for user:', req.userId);
+        return responseHandler.error(res, 'Current password is incorrect', statusCodes.UNAUTHORIZED);
+      }
+
+      // Check if new password is same as current password
+      const isSamePassword = await bcrypt.compare(newPassword, user.password);
+      if (isSamePassword) {
+        console.log('New password same as current password for user:', req.userId);
+        return responseHandler.error(res, 'New password must be different from current password', statusCodes.BAD_REQUEST);
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+      console.log('Password changed successfully for user:', req.userId);
+
+      responseHandler.success(res, null, 'Password changed successfully', statusCodes.OK);
+    } catch (bcryptError) {
+      console.error('Bcrypt error:', bcryptError);
+      return responseHandler.error(res, 'Error processing password', statusCodes.INTERNAL_SERVER_ERROR);
+    }
+  } catch (error) {
+    console.error('Change password error:', error);
+    if (error.name === 'ValidationError') {
+      return responseHandler.error(res, 'Invalid password format', statusCodes.BAD_REQUEST);
+    }
+    if (error.name === 'CastError') {
+      return responseHandler.error(res, 'Invalid user ID', statusCodes.BAD_REQUEST);
+    }
+    return responseHandler.error(res, 'An unexpected error occurred while changing password', statusCodes.INTERNAL_SERVER_ERROR);
+  }
+});
+
 module.exports = router; 
