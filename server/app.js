@@ -13,10 +13,14 @@ const payslipRoutes = require('./routes/payslipRoutes');
 const dashboardRoutes = require('./routes/dashboard');
 const homeRoutes = require('./routes/home');
 const config = require('./config/config');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(corsMiddleware);
+
+// Serve uploads as static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

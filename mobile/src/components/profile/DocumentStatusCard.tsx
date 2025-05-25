@@ -1,14 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Card, IconButton } from 'react-native-paper';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Card, Button, Text } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export type DocumentStatus = 'pending' | 'verified' | 'rejected';
 
 interface DocumentStatusCardProps {
   title: string;
-  status: DocumentStatus;
-  onUpload?: () => void;
-  onPreview?: () => void;
+  status: DocumentStatus | 'not_uploaded';
+  onUpload: () => void;
+  onPreview: () => void;
+  onDownload?: () => void;
+  required?: boolean;
 }
 
 export const DocumentStatusCard: React.FC<DocumentStatusCardProps> = ({
@@ -16,26 +19,21 @@ export const DocumentStatusCard: React.FC<DocumentStatusCardProps> = ({
   status,
   onUpload,
   onPreview,
+  onDownload,
+  required = false,
 }) => {
-  const getStatusColor = () => {
+  // Title color based on status
+  const getTitleColor = () => {
     switch (status) {
       case 'verified':
-        return '#4CAF50';
+        return '#4CAF50'; // Green
       case 'rejected':
-        return '#F44336';
+        return '#F44336'; // Red
+      case 'pending':
+        return '#FFA000'; // Orange
+      case 'not_uploaded':
       default:
-        return '#FFC107';
-    }
-  };
-
-  const getStatusIcon = () => {
-    switch (status) {
-      case 'verified':
-        return 'check-circle';
-      case 'rejected':
-        return 'close-circle';
-      default:
-        return 'clock-outline';
+        return '#888'; // Gray
     }
   };
 
@@ -43,38 +41,42 @@ export const DocumentStatusCard: React.FC<DocumentStatusCardProps> = ({
     <Card style={styles.card}>
       <Card.Content style={styles.content}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>{title}</Text>
-          <IconButton
-            icon={getStatusIcon()}
-            size={24}
-            iconColor={getStatusColor()}
-          />
-        </View>
-        <View style={styles.actions}>
-          {status === 'pending' && (
-            <IconButton
-              icon="upload"
-              size={24}
-              onPress={onUpload}
-              mode="contained"
-            />
+          <Text style={[styles.title, { color: getTitleColor() }]}>{title}</Text>
+          {required && status === 'not_uploaded' && (
+            <Text style={styles.required}>Required</Text>
           )}
-          {status !== 'pending' && (
-            <IconButton
-              icon="eye"
-              size={24}
-              onPress={onPreview}
-              mode="contained"
-            />
+        </View>
+        <View style={styles.actionsContainer}>
+          {status !== 'not_uploaded' && (
+            <TouchableOpacity onPress={onPreview} style={styles.iconButton}>
+              <MaterialCommunityIcons name="eye" size={24} color="#6200ee" />
+            </TouchableOpacity>
           )}
         </View>
       </Card.Content>
+      <Card.Actions style={styles.actions}>
+        {status === 'not_uploaded' ? (
+          <Button mode="contained" onPress={onUpload}>
+            Upload
+          </Button>
+        ) : (
+          <Button mode="contained" onPress={onUpload}>
+            Update
+          </Button>
+        )}
+        {status !== 'not_uploaded' && onDownload && (
+          <Button mode="outlined" onPress={onDownload}>
+            Download
+          </Button>
+        )}
+      </Card.Actions>
     </Card>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
+    marginHorizontal: 16,
     marginBottom: 8,
   },
   content: {
@@ -84,15 +86,26 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   title: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: 'bold',
+  },
+  required: {
+    fontSize: 12,
+    color: '#F44336',
+    marginTop: 4,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconButton: {
+    marginLeft: 8,
   },
   actions: {
-    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
 }); 

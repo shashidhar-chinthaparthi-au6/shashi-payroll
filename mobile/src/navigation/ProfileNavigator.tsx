@@ -61,7 +61,7 @@ export const ProfileNavigator: React.FC = () => {
         }}
       >
         <Tab.Screen
-          name="Profile"
+          name="Overview"
           component={ProfileOverviewScreen}
           options={{
             tabBarIcon: ({ color, size }) => (

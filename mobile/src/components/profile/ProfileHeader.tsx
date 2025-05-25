@@ -1,69 +1,43 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
-import { Avatar } from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+import { Text, Avatar } from 'react-native-paper';
 
-interface ProfileHeaderProps {
+export interface ProfileHeaderProps {
   name: string;
   position: string;
-  employeeId: string;
-  profileImage?: string;
+  department: string;
 }
 
-export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
-  name,
-  position,
-  employeeId,
-  profileImage,
-}) => {
+export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ name, position, department }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.avatarContainer}>
-        {profileImage ? (
-          <Image source={{ uri: profileImage }} style={styles.avatar} />
-        ) : (
-          <Avatar.Text size={80} label={name.split(' ').map(n => n[0]).join('')} />
-        )}
-      </View>
-      <View style={styles.detailsContainer}>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.position}>{position}</Text>
-        <Text style={styles.employeeId}>ID: {employeeId}</Text>
-      </View>
+      <Avatar.Text size={80} label={name.split(' ').map(n => n[0]).join('')} />
+      <Text style={styles.name}>{name}</Text>
+      <Text style={styles.position}>{position}</Text>
+      <Text style={styles.department}>{department}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    alignItems: 'center',
+    padding: 20,
     backgroundColor: '#fff',
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  avatarContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-  },
-  detailsContainer: {
-    alignItems: 'center',
   },
   name: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginTop: 10,
   },
   position: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 4,
+    marginTop: 5,
   },
-  employeeId: {
+  department: {
     fontSize: 14,
     color: '#888',
+    marginTop: 2,
   },
 }); 

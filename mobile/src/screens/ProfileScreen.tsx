@@ -33,7 +33,7 @@ const ProfileScreen = () => {
           onPress={handleLogout}
           activeOpacity={0.7}
         >
-          <Text style={styles.logoutButtonText}>Logout</Text>
+          {/* <Text style={styles.logoutButtonText}>Logout</Text> */}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
