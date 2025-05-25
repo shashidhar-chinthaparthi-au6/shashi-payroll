@@ -39,7 +39,7 @@ const HomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [employeeId] = useState('682da825abb9b474aca68267'); // Actual seeded employee ID
+  const [employeeId] = useState('682fe54b71870e49c8c2fe1c'); // Actual seeded employee ID
 
   const fetchDashboardData = async () => {
     try {

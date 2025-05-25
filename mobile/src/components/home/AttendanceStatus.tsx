@@ -20,8 +20,16 @@ type Props = {
 const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
   const { colors } = useTheme();
 
+  const isToday = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  };
+
   const getStatusColor = () => {
-    if (!attendance) return '#F44336';
+    if (!attendance || !isToday(attendance.checkIn)) return '#F44336';
     switch (attendance.status) {
       case 'present':
         return attendance.checkOut ? '#2196F3' : '#4CAF50';
@@ -37,8 +45,8 @@ const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
   };
 
   const getStatusText = () => {
-    if (!attendance) return 'Not Checked In';
-    if (attendance.checkOut) return 'Checked Out';
+    if (!attendance || !isToday(attendance.checkIn)) return 'Not Checked In';
+    if (attendance.checkOut) return 'Shift Completed';
     return attendance.status.charAt(0).toUpperCase() + attendance.status.slice(1);
   };
 
@@ -60,6 +68,37 @@ const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
     }
   };
 
+  const renderActionButton = () => {
+    if (!attendance || !isToday(attendance.checkIn)) {
+      return (
+        <TouchableOpacity 
+          style={[styles.checkoutButton, { backgroundColor: colors.primary }]}
+          onPress={handleCheckIn}
+        >
+          <Text style={styles.buttonText}>Check In</Text>
+        </TouchableOpacity>
+      );
+    }
+
+    if (attendance.checkOut) {
+      return (
+        <View style={styles.completedContainer}>
+          <Icon name="check-circle" size={24} color="#4CAF50" style={styles.completedIcon} />
+          <Text style={styles.completedText}>Shift completed for today</Text>
+        </View>
+      );
+    }
+
+    return (
+      <TouchableOpacity 
+        style={[styles.checkoutButton, { backgroundColor: colors.primary }]}
+        onPress={handleCheckOut}
+      >
+        <Text style={styles.buttonText}>Check Out</Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -71,7 +110,7 @@ const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
         <Icon name="clock-outline" size={24} color="#fff" />
         <View style={styles.statusInfo}>
           <Text style={styles.statusText}>{getStatusText()}</Text>
-          {attendance && (
+          {attendance && isToday(attendance.checkIn) && (
             <Text style={styles.timeText}>
               {attendance.checkIn ? new Date(attendance.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
               {attendance.checkOut ? ` - ${new Date(attendance.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
@@ -80,21 +119,7 @@ const AttendanceStatus = ({ attendance, employeeId, onUpdate }: Props) => {
         </View>
       </View>
 
-      {(!attendance || attendance.checkOut) ? (
-        <TouchableOpacity 
-          style={[styles.checkoutButton, { backgroundColor: colors.primary }]}
-          onPress={handleCheckIn}
-        >
-          <Text style={styles.buttonText}>Check In</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity 
-          style={[styles.checkoutButton, { backgroundColor: colors.primary }]}
-          onPress={handleCheckOut}
-        >
-          <Text style={styles.buttonText}>Check Out</Text>
-        </TouchableOpacity>
-      )}
+      {renderActionButton()}
     </View>
   );
 };
@@ -152,6 +177,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  completedContainer: {
+    alignItems: 'center',
+  },
+  completedIcon: {
+    marginBottom: 8,
+  },
+  completedText: {
+    color: '#4CAF50',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
   },
 });
 
