@@ -86,10 +86,7 @@ router.post('/check-in', verifyToken, async (req, res) => {
         time: formatDate(attendance.checkIn.time),
         method: attendance.checkIn.method
       } : null,
-      checkOut: attendance.checkOut ? {
-        time: formatDate(attendance.checkOut.time),
-        method: attendance.checkOut.method
-      } : null,
+      checkOut: null,
       status: attendance.status,
       user: null // Will be populated if needed
     };
@@ -185,11 +182,14 @@ router.post('/check-out', verifyToken, async (req, res) => {
       }
     });
 
+    console.log("Current attendance record:", attendance);
+
     if (!attendance) {
       return res.status(404).json({ message: 'No check-in found for today' });
     }
 
-    if (attendance.checkOut) {
+    // Check if checkOut time exists
+    if (attendance.checkOut && attendance.checkOut.time) {
       return res.status(400).json({ message: 'Already checked out today' });
     }
 

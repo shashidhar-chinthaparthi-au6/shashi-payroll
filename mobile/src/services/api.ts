@@ -2,8 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Use your machine's IP address here
-// const API_URL = 'https://payroll-server-ne8y.onrender.com/api'; // Updated production API URL
-const API_URL = 'http://192.168.0.101:5000/api'   // Updated production API URL
+const API_URL = 'https://payroll-server-ne8y.onrender.com/api'; // Updated production API URL
+// const API_URL = 'http://192.168.0.101:5000/api'   // Updated production API URL
 
 const api = axios.create({
   baseURL: API_URL,
@@ -50,16 +50,28 @@ export const authAPI = {
 };
 
 export const attendanceAPI = {
-  markAttendance: async (userId: string) => {
-    console.log('Sending manual attendance request:', { userId });
+  checkIn: async (userId: string) => {
+    console.log('Sending check-in request:', { userId });
     try {
       const response = await api.post('/attendance/check-in', { userId });
-      console.log('Manual attendance response:', response.data);
+      console.log('Check-in response:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Error in markAttendance:', error.response?.data || error.message);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to mark attendance';
-      throw new Error(`Error marking attendance: ${errorMessage}`);
+      console.error('Error in checkIn:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to check in';
+      throw new Error(`Error checking in: ${errorMessage}`);
+    }
+  },
+  checkOut: async (userId: string) => {
+    console.log('Sending check-out request:', { userId });
+    try {
+      const response = await api.post('/attendance/check-out', { userId });
+      console.log('Check-out response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in checkOut:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to check out';
+      throw new Error(`Error checking out: ${errorMessage}`);
     }
   },
   getAttendanceHistory: async () => {

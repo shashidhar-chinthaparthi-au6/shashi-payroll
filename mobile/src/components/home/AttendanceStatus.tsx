@@ -27,12 +27,32 @@ type Props = {
 const AttendanceStatus = ({ attendance, userId, onUpdate }: Props) => {
   const { colors } = useTheme();
 
+  const formatTime = (timeString: string | undefined) => {
+    if (!timeString) return '';
+    try {
+      const date = new Date(timeString);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date string:', timeString);
+        return '';
+      }
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return '';
+    }
+  };
+
   const isToday = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+    try {
+      const date = new Date(dateString);
+      const today = new Date();
+      return date.getDate() === today.getDate() &&
+             date.getMonth() === today.getMonth() &&
+             date.getFullYear() === today.getFullYear();
+    } catch (error) {
+      console.error('Error checking if date is today:', error);
+      return false;
+    }
   };
 
   const getStatusColor = () => {
@@ -53,13 +73,15 @@ const AttendanceStatus = ({ attendance, userId, onUpdate }: Props) => {
 
   const getStatusText = () => {
     if (!attendance) return 'Not Checked In';
-    if (attendance.checkOut?.time) return 'Shift Completed';
+    if (attendance.checkOut && attendance.checkOut.time) return 'Shift Completed';
     return attendance.status.charAt(0).toUpperCase() + attendance.status.slice(1);
   };
 
   const handleCheckIn = async () => {
     try {
-      await attendanceAPI.markAttendance(userId);
+      console.log('Attempting check-in for user:', userId);
+      await attendanceAPI.checkIn(userId);
+      console.log('Check-in successful');
       onUpdate();
     } catch (error) {
       console.error('Check-in error:', error);
@@ -68,7 +90,9 @@ const AttendanceStatus = ({ attendance, userId, onUpdate }: Props) => {
 
   const handleCheckOut = async () => {
     try {
-      await attendanceAPI.markAttendance(userId);
+      console.log('Attempting check-out for user:', userId);
+      await attendanceAPI.checkOut(userId);
+      console.log('Check-out successful');
       onUpdate();
     } catch (error) {
       console.error('Check-out error:', error);
@@ -87,7 +111,7 @@ const AttendanceStatus = ({ attendance, userId, onUpdate }: Props) => {
       );
     }
 
-    if (attendance.checkOut?.time) {
+    if (attendance.checkOut && attendance.checkOut.time) {
       return (
         <View style={styles.completedContainer}>
           <Icon name="check-circle" size={24} color="#4CAF50" style={styles.completedIcon} />
@@ -106,6 +130,19 @@ const AttendanceStatus = ({ attendance, userId, onUpdate }: Props) => {
     );
   };
 
+  // Log attendance data for debugging
+  React.useEffect(() => {
+    if (attendance) {
+      console.log('Current attendance data:', {
+        id: attendance.id,
+        date: attendance.date,
+        checkIn: attendance.checkIn,
+        checkOut: attendance.checkOut,
+        status: attendance.status
+      });
+    }
+  }, [attendance]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -119,8 +156,8 @@ const AttendanceStatus = ({ attendance, userId, onUpdate }: Props) => {
           <Text style={styles.statusText}>{getStatusText()}</Text>
           {attendance && (
             <Text style={styles.timeText}>
-              {attendance.checkIn ? new Date(attendance.checkIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-              {attendance.checkOut?.time ? ` - ${new Date(attendance.checkOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+              {formatTime(attendance.checkIn?.time)}
+              {attendance.checkOut?.time ? ` - ${formatTime(attendance.checkOut.time)}` : ''}
             </Text>
           )}
         </View>

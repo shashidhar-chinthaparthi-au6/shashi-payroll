@@ -5,11 +5,11 @@ const attendanceSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   checkIn: {
     time: { type: Date },
-    method: { type: String, enum: ['manual', 'qr', 'biometric'], default: 'manual' }
+    method: { type: String, enum: ['manual', 'qr', 'biometric'] }
   },
   checkOut: {
     time: { type: Date },
-    method: { type: String, enum: ['manual', 'qr', 'biometric'], default: 'manual' }
+    method: { type: String, enum: ['manual', 'qr', 'biometric']}
   },
   status: { 
     type: String, 

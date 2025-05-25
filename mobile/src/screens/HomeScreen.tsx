@@ -8,18 +8,27 @@ import CalendarWidget from '../components/home/CalendarWidget';
 import { getDashboardData } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
+type Attendance = {
+  id: string;
+  date: string;
+  checkIn: {
+    time: string;
+    method: string;
+  };
+  checkOut?: {
+    time?: string;
+    method: string;
+  };
+  status: 'present' | 'absent' | 'late' | 'half-day';
+};
+
 type DashboardData = {
   employee: {
     name: string;
     department: string;
     position: string;
   };
-  attendance: {
-    _id: string;
-    checkIn: string;
-    checkOut?: string;
-    status: 'present' | 'absent' | 'late' | 'half-day';
-  };
+  attendance: Attendance;
   notifications: Array<{
     _id: string;
     title: string;
@@ -50,17 +59,36 @@ const HomeScreen = () => {
 
     try {
       const data = await getDashboardData(user.id);
+      console.log('Raw API response:', data); // Debug log
+
+      // Transform attendance data to match expected type
+      const transformedAttendance = data.attendance ? {
+        id: data.attendance._id,
+        date: data.attendance.date,
+        checkIn: {
+          time: data.attendance.checkIn.time,
+          method: data.attendance.checkIn.method
+        },
+        checkOut: data.attendance.checkOut ? {
+          time: data.attendance.checkOut.time,
+          method: data.attendance.checkOut.method
+        } : undefined,
+        status: data.attendance.status
+      } : null;
+
+      console.log('Transformed attendance:', transformedAttendance); // Debug log
+
       // Override events with static data for testing
       const staticEvents = [
         { _id: '1', title: 'Team Meeting', date: '2023-10-15', type: 'meeting' },
         { _id: '2', title: 'Holiday', date: '2023-10-20', type: 'holiday' },
         { _id: '3', title: 'Leave', date: '2023-10-25', type: 'leave' }
       ];
-      setDashboardData({ ...data, events: staticEvents });
+      setDashboardData({ ...data, attendance: transformedAttendance, events: staticEvents });
       setError(null);
     } catch (err) {
-      setError('Failed to load dashboard data');
       console.error('Dashboard error:', err);
+      setError('Failed to load dashboard data');
     }
   };
 
