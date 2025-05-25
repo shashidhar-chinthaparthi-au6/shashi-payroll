@@ -31,7 +31,7 @@ const LeaveRequestScreen = () => {
 
   useEffect(() => {
     if (user?.employee?.id && token) {
-      leaveAPI.getLeaveBalance(user.employee.id, token).then(setLeaveBalances);
+      leaveAPI.getLeaveBalance().then(setLeaveBalances);
     }
   }, [user, token]);
 
@@ -55,9 +55,31 @@ const LeaveRequestScreen = () => {
         startDate,
         endDate,
         reason
-      }, token);
-      Alert.alert('Success', 'Leave request submitted!');
+      });
+      
+      // Refresh leave balance immediately
+      const updatedBalances = await leaveAPI.getLeaveBalance();
+      setLeaveBalances(updatedBalances);
+      
+      // Clear form
       setReason('');
+      setStartDate(new Date());
+      setEndDate(new Date());
+      
+      Alert.alert(
+        'Success',
+        'Leave request submitted successfully!',
+        [
+          {
+            text: 'View History',
+            onPress: () => navigation.navigate('LeaveHistory')
+          },
+          {
+            text: 'OK',
+            style: 'cancel'
+          }
+        ]
+      );
     } catch (error) {
       Alert.alert('Error', 'Failed to submit leave request.');
     }
@@ -168,7 +190,7 @@ const LeaveRequestScreen = () => {
           )}
         </Text>
 
-        <Text style={styles.label}>Reason</Text>
+        <Text style={styles.label}>Reason <Text style={styles.requiredText}>*</Text></Text>
         <TextInput
           mode="outlined"
           style={styles.reasonInput}
@@ -177,15 +199,22 @@ const LeaveRequestScreen = () => {
           numberOfLines={4}
           value={reason}
           onChangeText={setReason}
-          placeholder="Enter reason for leave"
+          placeholder="Enter reason for leave (required)"
+          error={!reason.trim()}
         />
+        {!reason.trim() && (
+          <Text style={styles.errorText}>Reason is required</Text>
+        )}
 
         <Button
           mode="contained"
           onPress={handleSubmit}
-          style={styles.submitButton}
+          style={[
+            styles.submitButton,
+            (!reason.trim() || requestedDays > availableDays) && styles.disabledButton
+          ]}
           labelStyle={styles.submitButtonLabel}
-          disabled={requestedDays > availableDays || !reason.trim()}
+          disabled={!reason.trim() || requestedDays > availableDays}
         >
           Submit Request
         </Button>
@@ -329,6 +358,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     letterSpacing: 0.5,
+  },
+  requiredText: {
+    color: '#FF6B6B',
+    fontSize: 16,
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+    opacity: 0.7,
   },
 });
 

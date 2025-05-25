@@ -34,10 +34,8 @@ const LeaveHistoryScreen = () => {
 
   useEffect(() => {
     if (user?.id && token) {
-      leaveAPI.getLeaveBalance(user.id, token).then(setLeaveBalances);
-      const safeMonth = Math.max(1, Math.min(Number(selectedMonth) + 1, 12));
-      console.log('Selected month (0-based):', selectedMonth, 'Sent to API:', safeMonth);
-      leaveAPI.getLeaveHistory(user.id, token, safeMonth, selectedYear).then(setLeaveHistory);
+      leaveAPI.getLeaveBalance().then(setLeaveBalances);
+      leaveAPI.getLeaveHistory(user.id, selectedMonth, selectedYear).then(setLeaveHistory);
     }
   }, [user, token, selectedMonth, selectedYear]);
 

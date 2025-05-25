@@ -9,6 +9,15 @@ const LEAVE_TYPES = [
   { type: 'annual', total: 20 }
 ];
 
+// Helper function to calculate days between dates
+const calculateDays = (startDate, endDate) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const diffTime = Math.abs(end - start);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays + 1; // Include both start and end dates
+};
+
 // Request leave
 router.post('/request', verifyToken, async (req, res) => {
   try {
@@ -25,7 +34,17 @@ router.post('/request', verifyToken, async (req, res) => {
 // Get leave history
 router.get('/history/:userId', verifyToken, async (req, res) => {
   try {
+    const { month, year } = req.query;
     const query = { userId: req.params.userId };
+
+    // Add date range filter if month and year are provided
+    if (month !== undefined && year !== undefined) {
+      const startDate = new Date(year, month, 1); // First day of the month
+      const endDate = new Date(year, Number(month) + 1, 0, 23, 59, 59, 999); // Last day of the month
+      
+      query.startDate = { $gte: startDate, $lte: endDate };
+    }
+
     const leaves = await Leave.find(query)
       .sort({ startDate: -1 })
       .populate('approvedBy', 'name');
@@ -36,16 +55,17 @@ router.get('/history/:userId', verifyToken, async (req, res) => {
 });
 
 // Get leave balance
-router.get('/balance/:userId', verifyToken, async (req, res) => {
+router.get('/balance', verifyToken, async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.userId;
     const leaves = await Leave.find({ userId, status: { $in: ['approved', 'pending'] } });
+    console.log("leaves", leaves);
     
     const balance = LEAVE_TYPES.map(leaveType => {
       const used = leaves
         .filter(leave => leave.type === leaveType.type)
         .reduce((total, leave) => {
-          const days = Math.ceil((leave.endDate - leave.startDate) / (1000 * 60 * 60 * 24));
+          const days = calculateDays(leave.startDate, leave.endDate);
           return total + days;
         }, 0);
       
@@ -53,7 +73,7 @@ router.get('/balance/:userId', verifyToken, async (req, res) => {
         type: leaveType.type,
         total: leaveType.total,
         used,
-        remaining: leaveType.total - used
+        remaining: Math.max(0, leaveType.total - used) // Ensure remaining is not negative
       };
     });
 

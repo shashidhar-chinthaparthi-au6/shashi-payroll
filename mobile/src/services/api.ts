@@ -134,25 +134,18 @@ export const getDashboardData = async (userId: string) => {
 };
 
 export const leaveAPI = {
-  requestLeave: async (leaveData: any, token: string) => {
-    const res = await axios.post(`${API_URL}/leave/request`, leaveData, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return res.data;
+  requestLeave: async (leaveData: any) => {
+    const response = await api.post('/leave/request', leaveData);
+    return response.data;
   },
-  getLeaveHistory: async (userId: string, token: string, month?: number, year?: number) => {
+  getLeaveHistory: async (userId: string, month?: number, year?: number) => {
     const params = month && year ? { month, year } : {};
-    const res = await axios.get(`${API_URL}/leave/history/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      params,
-    });
-    return res.data;
+    const response = await api.get(`/leave/history/${userId}`, { params });
+    return response.data;
   },
-  getLeaveBalance: async (userId: string, token: string) => {
-    const res = await axios.get(`${API_URL}/leave/balance/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return res.data;
+  getLeaveBalance: async () => {
+    const response = await api.get('/leave/balance');
+    return response.data;
   }
 };
 
