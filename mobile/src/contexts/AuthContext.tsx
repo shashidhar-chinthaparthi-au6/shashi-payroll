@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { login as loginAction, logout as logoutAction } from '../store/slices/authSlice';
+import { RootState, AppDispatch } from '../store';
 
 interface User {
   id: string;
@@ -24,39 +26,22 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    // Load user data from storage on app start
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
-    try {
-      const userData = await AsyncStorage.getItem('user');
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
-  };
+  const dispatch = useDispatch<AppDispatch>();
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const login = async (userData: User) => {
     try {
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
+      await dispatch(loginAction({ email: userData.email, password: '' })).unwrap();
     } catch (error) {
-      console.error('Error saving user data:', error);
+      console.error('Error during login:', error);
     }
   };
 
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem('user');
-      setUser(null);
+      await dispatch(logoutAction()).unwrap();
     } catch (error) {
-      console.error('Error removing user data:', error);
+      console.error('Error during logout:', error);
     }
   };
 

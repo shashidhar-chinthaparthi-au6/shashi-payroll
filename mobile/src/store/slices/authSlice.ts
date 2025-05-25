@@ -53,9 +53,17 @@ export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }: { email: string; password: string }) => {
     const response = await authAPI.login(email, password);
-    await AsyncStorage.setItem('token', response.data.token);
-    await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-    return response;
+    // First update the Redux store
+    const result = {
+      user: response.data.user,
+      token: response.data.token,
+    };
+    // Then save to AsyncStorage
+    await Promise.all([
+      AsyncStorage.setItem('token', response.data.token),
+      AsyncStorage.setItem('user', JSON.stringify(response.data.user))
+    ]);
+    return result;
   }
 );
 
@@ -94,8 +102,9 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.data.user;
-        state.token = action.payload.data.token;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
