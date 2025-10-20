@@ -3,7 +3,11 @@ const router = express.Router();
 const User = require('../models/User');
 const Employee = require('../models/Employee');
 const Attendance = require('../models/Attendance');
+const Organization = require('../models/Organization');
 const Payroll = require('../models/Payroll');
+const ContractAssignment = require('../models/ContractAssignment');
+const Leave = require('../models/Leave');
+const Activity = require('../models/Activity');
 const STATUS = require('../utils/constants/statusCodes');
 const MSG = require('../utils/constants/messages');
 const { verifyToken, checkRole } = require('../middleware/auth');
@@ -30,16 +34,32 @@ router.get('/admin', verifyToken, checkRole(['admin']), async (req, res) => {
     const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
     const totalContractors = await Employee.countDocuments({ employmentType: 'contract' });
+    const totalOrganizations = await Organization.countDocuments({});
 
-    const activeContracts = 0; // Placeholder until contracts feature is implemented
+    const activeContracts = await ContractAssignment.countDocuments({ status: 'active' });
 
-    const pendingApprovals = await Payroll.countDocuments({ status: 'pending' });
+    // Calculate pending approvals from multiple sources
+    const [pendingPayrolls, pendingLeaves, pendingContracts] = await Promise.all([
+      Payroll.countDocuments({ status: 'pending' }),
+      Leave.countDocuments({ status: 'pending' }),
+      ContractAssignment.countDocuments({ status: 'pending' })
+    ]);
+    const pendingApprovals = pendingPayrolls + pendingLeaves + pendingContracts;
 
-    const systemHealth = 95; // Placeholder health score
+    // Calculate system health based on various metrics
+    const activeEmployees = await Employee.countDocuments({ status: 'active' });
+    const recentActivities = await Activity.countDocuments({ 
+      createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+    });
+    
+    // Health calculation factors
+    const employeeHealth = totalEmployees > 0 ? (activeEmployees / totalEmployees) * 100 : 100;
+    const activityHealth = recentActivities > 0 ? Math.min(100, (recentActivities / 10) * 100) : 50; // Normalize activity
+    const systemHealth = Math.round((employeeHealth + activityHealth) / 2);
 
     return res.status(STATUS.OK).json({
       data: {
-        totalOrganizations: 0, // Placeholder after removing shops/organizations
+        totalOrganizations,
         totalUsers,
         totalContractors,
         activeContracts,
