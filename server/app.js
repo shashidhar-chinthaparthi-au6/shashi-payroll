@@ -11,7 +11,8 @@ const payrollRoutes = require('./routes/payroll');
 const payslipRoutes = require('./routes/payslipRoutes');
 const userRoutes = require('./routes/userRoutes');
 const dashboardRoutes = require('./routes/dashboard');
-const adminRoutes = require('./routes/admin');
+const adminRouter = require('./routes/admin');
+const clientRoutes = require('./routes/client');
 const config = require('./config/config');
 const path = require('path');
 
@@ -57,7 +58,8 @@ app.use('/api/payslips', payslipRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/leave', require('./routes/leave'));
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', adminRouter);
+app.use('/api/client', clientRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

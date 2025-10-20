@@ -12,10 +12,14 @@ const SystemSettings = require('../models/SystemSettings');
 const Activity = require('../models/Activity');
 const STATUS = require('../utils/constants/statusCodes');
 const MSG = require('../utils/constants/messages');
-const { verifyToken, checkRole } = require('../middleware/auth');
+const { verifyToken, checkRole, populateUser } = require('../middleware/auth');
 
 // All admin routes require admin role
 router.use(verifyToken, checkRole(['admin']));
+
+// Organization Manager routes (client role)
+const clientRoutes = express.Router();
+clientRoutes.use(verifyToken, populateUser, checkRole(['client']));
 
 // List users (without passwords)
 router.get('/users', async (req, res) => {
@@ -297,10 +301,15 @@ router.put('/settings', async (req, res) => {
   }
 });
 
-// Recent activities
+// Recent activities (Super Admin only - no organizationId)
 router.get('/activities', async (req, res) => {
   try {
-    const items = await Activity.find({}).sort({ createdAt: -1 }).limit(20).populate('actor', 'name email').lean();
+    const items = await Activity.find({ 
+      $or: [
+        { 'meta.organizationId': { $exists: false } },
+        { 'meta.organizationId': null }
+      ]
+    }).sort({ createdAt: -1 }).limit(20).populate('actor', 'name email').lean();
     return res.status(STATUS.OK).json({ data: items, message: MSG.SUCCESS || 'Success' });
   } catch (error) {
     console.error('Admin list activities error:', error);

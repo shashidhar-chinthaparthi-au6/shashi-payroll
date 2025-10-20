@@ -19,6 +19,21 @@ exports.verifyToken = (req, res, next) => {
   }
 };
 
+// Middleware to populate user object
+exports.populateUser = async (req, res, next) => {
+  try {
+    if (req.userId) {
+      const user = await User.findById(req.userId).lean();
+      if (user) {
+        req.user = user;
+      }
+    }
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: 'Error populating user' });
+  }
+};
+
 // Middleware to check if user has required role
 exports.checkRole = (roles) => {
   return (req, res, next) => {

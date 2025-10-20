@@ -10,7 +10,7 @@ const Leave = require('../models/Leave');
 const Activity = require('../models/Activity');
 const STATUS = require('../utils/constants/statusCodes');
 const MSG = require('../utils/constants/messages');
-const { verifyToken, checkRole } = require('../middleware/auth');
+const { verifyToken, checkRole, populateUser } = require('../middleware/auth');
 
 // Helper function to get today's date range
 const getTodayDateRange = () => {
@@ -75,12 +75,19 @@ router.get('/admin', verifyToken, checkRole(['admin']), async (req, res) => {
 });
 
 // Client (Org Manager) dashboard statistics
-router.get('/client', verifyToken, checkRole(['client']), async (req, res) => {
+router.get('/client', verifyToken, populateUser, checkRole(['client']), async (req, res) => {
   try {
-    const totalEmployees = await Employee.countDocuments({});
+    const organizationId = req.user.organizationId;
+    
+    if (!organizationId) {
+      return res.status(STATUS.BAD_REQUEST).json({ message: 'Organization ID not found' });
+    }
+
+    const totalEmployees = await Employee.countDocuments({ organizationId });
 
     const { today, tomorrow } = getTodayDateRange();
     const presentToday = await Attendance.countDocuments({
+      organizationId,
       date: { $gte: today, $lt: tomorrow },
       status: 'present',
     });
@@ -89,24 +96,45 @@ router.get('/client', verifyToken, checkRole(['client']), async (req, res) => {
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-    const pendingPayroll = await Payroll.countDocuments({ status: 'pending', date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth } });
+    const pendingPayroll = await Payroll.countDocuments({ 
+      organizationId,
+      status: 'pending', 
+      date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth } 
+    });
 
-    const pendingLeaves = 0; // Placeholder until leave endpoints integrated
+    const pendingLeaves = await Leave.countDocuments({ 
+      organizationId,
+      status: 'pending' 
+    });
 
     const monthlyExpenseAgg = await Payroll.aggregate([
-      { $match: { date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth } } },
+      { $match: { 
+        organizationId,
+        date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth } 
+      }},
       { $group: { _id: null, total: { $sum: '$netSalary' } } },
     ]);
     const monthlyExpense = monthlyExpenseAgg.length > 0 ? monthlyExpenseAgg[0].total : 0;
 
+    // Calculate attendance rate
+    const totalAttendanceRecords = await Attendance.countDocuments({
+      organizationId,
+      date: { $gte: today, $lt: tomorrow }
+    });
+    const attendanceRate = totalAttendanceRecords > 0 ? Math.round((presentToday / totalAttendanceRecords) * 100) : 0;
+
     return res.status(STATUS.OK).json({
       data: {
         totalEmployees,
-        totalContractors: await Employee.countDocuments({ employmentType: 'contract' }),
+        totalContractors: await Employee.countDocuments({ 
+          organizationId,
+          employmentType: 'contract' 
+        }),
         presentToday,
         pendingPayroll,
         pendingLeaves,
         monthlyExpense,
+        attendanceRate
       },
       message: MSG.SUCCESS || 'Success',
     });
