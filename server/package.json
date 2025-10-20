@@ -6,12 +6,11 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "jest",
-    "postinstall": "npm rebuild bcrypt --build-from-source",
-    "drop-db": "node scripts/drop-db.js"
+    "seed-users": "node scripts/seedDefaultUsers.js",
+    "db:clear": "node scripts/dbClear.js"
   },
   "dependencies": {
-    "bcrypt": "^5.0.1",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
@@ -24,9 +23,7 @@
     "winston": "^3.3.3"
   },
   "devDependencies": {
-    "jest": "^27.3.1",
-    "nodemon": "^2.0.14",
-    "supertest": "^6.1.6"
+    "nodemon": "^2.0.14"
   },
   "engines": {
     "node": "18.x"

@@ -5,13 +5,12 @@ const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
 const redisClient = require('./utils/redis');
 const authRoutes = require('./routes/auth');
-const shopRoutes = require('./routes/shopRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const attendanceRoutes = require('./routes/attendance');
 const payrollRoutes = require('./routes/payroll');
 const payslipRoutes = require('./routes/payslipRoutes');
+const userRoutes = require('./routes/userRoutes');
 const dashboardRoutes = require('./routes/dashboard');
-const homeRoutes = require('./routes/home');
 const config = require('./config/config');
 const path = require('path');
 
@@ -50,14 +49,13 @@ mongoose.connect(config[process.env.NODE_ENV || 'development'].mongodb.uri, {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/shops', shopRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/payslips', payslipRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/home', homeRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/leave', require('./routes/leave'));
+app.use('/api/dashboard', dashboardRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

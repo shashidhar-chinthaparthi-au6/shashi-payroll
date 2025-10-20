@@ -12,17 +12,16 @@ const { verifyToken } = require('../middleware/auth');
  *   -H "Content-Type: application/json" \
  *   -d '{"month": 5, "year": 2024}'
  */
-// Generate monthly payroll for a shop
-router.post('/generate/:shopId', verifyToken, async (req, res) => {
+// Generate monthly payroll (shop removed)
+router.post('/generate', verifyToken, async (req, res) => {
     try {
-        const { shopId } = req.params;
         const { month, year } = req.body;
 
         if (!month || !year) {
             return res.status(400).json({ error: 'Month and year are required' });
         }
 
-        const payrollEntries = await PayrollService.generateMonthlyPayroll(shopId, month, year);
+        const payrollEntries = await PayrollService.generateMonthlyPayroll(null, month, year);
         res.status(201).json(payrollEntries);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -36,17 +35,16 @@ router.post('/generate/:shopId', verifyToken, async (req, res) => {
  * curl -X GET "http://localhost:3000/api/payroll/summary/123456789?month=5&year=2024" \
  *   -H "Authorization: Bearer YOUR_JWT_TOKEN"
  */
-// Get payroll summary for a shop
-router.get('/summary/:shopId', verifyToken, async (req, res) => {
+// Get payroll summary (shop removed)
+router.get('/summary', verifyToken, async (req, res) => {
     try {
-        const { shopId } = req.params;
         const { month, year } = req.query;
 
         if (!month || !year) {
             return res.status(400).json({ error: 'Month and year are required' });
         }
 
-        const summary = await PayrollService.getShopPayrollSummary(shopId, parseInt(month), parseInt(year));
+        const summary = await PayrollService.getShopPayrollSummary(null, parseInt(month), parseInt(year));
         res.json(summary);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -86,7 +84,6 @@ router.get('/:payrollId', verifyToken, async (req, res) => {
         const { payrollId } = req.params;
         const payroll = await Payroll.findById(payrollId)
             .populate('employee', 'name')
-            .populate('shop', 'name')
             .populate('approvedBy', 'name');
 
         if (!payroll) {

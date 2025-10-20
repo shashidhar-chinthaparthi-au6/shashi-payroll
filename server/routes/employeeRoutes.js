@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Employee = require('../models/Employee');
-const Shop = require('../models/Shop');
+// Shop removed
 const User = require('../models/User');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { verifyToken, checkRole } = require('../middleware/auth');
 const upload = require('../utils/multerConfig');
 const path = require('path');
@@ -222,19 +222,10 @@ router.post('/', verifyToken, checkRole(['client']), async (req, res) => {
   }
 });
 
-// Get all employees for a shop
-router.get('/shop/:shopId', verifyToken, checkRole(['client']), async (req, res) => {
+// Get all employees
+router.get('/all', verifyToken, checkRole(['client']), async (req, res) => {
   try {
-    // Verify shop ownership
-    const shop = await Shop.findById(req.params.shopId);
-    if (!shop) {
-      return res.status(404).json({ error: 'Shop not found' });
-    }
-    if (shop.owner.toString() !== req.userId) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    const employees = await Employee.find({ shop: req.params.shopId });
+    const employees = await Employee.find({});
     res.json(employees);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -249,11 +240,7 @@ router.get('/:id', verifyToken, checkRole(['client']), async (req, res) => {
       return res.status(404).json({ error: 'Employee not found' });
     }
 
-    // Verify shop ownership
-    const shop = await Shop.findById(employee.shop);
-    if (shop.owner.toString() !== req.userId) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
+    // Shop ownership validation removed
 
     res.json(employee);
   } catch (error) {
@@ -269,11 +256,7 @@ router.patch('/:id', verifyToken, checkRole(['client']), async (req, res) => {
       return res.status(404).json({ error: 'Employee not found' });
     }
 
-    // Verify shop ownership
-    const shop = await Shop.findById(employee.shop);
-    if (shop.owner.toString() !== req.userId) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
+    // Shop ownership validation removed
 
     const updates = Object.keys(req.body);
     updates.forEach(update => employee[update] = req.body[update]);
@@ -293,11 +276,7 @@ router.delete('/:id', verifyToken, checkRole(['client']), async (req, res) => {
       return res.status(404).json({ error: 'Employee not found' });
     }
 
-    // Verify shop ownership
-    const shop = await Shop.findById(employee.shop);
-    if (shop.owner.toString() !== req.userId) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
+    // Shop ownership validation removed
 
     await employee.remove();
     res.json({ message: 'Employee deleted successfully' });

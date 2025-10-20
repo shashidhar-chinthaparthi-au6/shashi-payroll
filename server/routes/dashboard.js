@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const Shop = require('../models/Shop');
+const User = require('../models/User');
 const Employee = require('../models/Employee');
 const Attendance = require('../models/Attendance');
 const Payroll = require('../models/Payroll');
+const STATUS = require('../utils/constants/statusCodes');
+const MSG = require('../utils/constants/messages');
 const { verifyToken, checkRole } = require('../middleware/auth');
 
 // Helper function to get today's date range
@@ -15,206 +17,123 @@ const getTodayDateRange = () => {
   return { today, tomorrow };
 };
 
-// Get dashboard statistics (admin only)
-router.get('/stats', verifyToken, checkRole(['admin']), async (req, res) => {
+// Admin dashboard statistics
+router.get('/admin', verifyToken, checkRole(['admin']), async (req, res) => {
   try {
-    // Get total number of shops
-    const totalShops = await Shop.countDocuments();
+    const [totalUsers, totalEmployees] = await Promise.all([
+      User.countDocuments({}),
+      Employee.countDocuments({}),
+    ]);
 
-    // Get total number of employees
-    const totalEmployees = await Employee.countDocuments();
-
-    // Get total payroll amount for the current month
     const currentDate = new Date();
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-    const totalPayroll = await Payroll.aggregate([
-      {
-        $match: {
-          date: {
-            $gte: firstDayOfMonth,
-            $lte: lastDayOfMonth
-          }
-        }
+    const totalContractors = await Employee.countDocuments({ employmentType: 'contract' });
+
+    const activeContracts = 0; // Placeholder until contracts feature is implemented
+
+    const pendingApprovals = await Payroll.countDocuments({ status: 'pending' });
+
+    const systemHealth = 95; // Placeholder health score
+
+    return res.status(STATUS.OK).json({
+      data: {
+        totalOrganizations: 0, // Placeholder after removing shops/organizations
+        totalUsers,
+        totalContractors,
+        activeContracts,
+        pendingApprovals,
+        systemHealth,
       },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$netSalary' }
-        }
-      }
-    ]);
-
-    // Calculate average attendance rate for the current month
-    const attendanceStats = await Attendance.aggregate([
-      {
-        $match: {
-          date: {
-            $gte: firstDayOfMonth,
-            $lte: lastDayOfMonth
-          }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          totalDays: { $sum: 1 },
-          presentDays: {
-            $sum: {
-              $cond: [{ $eq: ['$status', 'present'] }, 1, 0]
-            }
-          }
-        }
-      }
-    ]);
-
-    const averageAttendance = attendanceStats.length > 0
-      ? (attendanceStats[0].presentDays / attendanceStats[0].totalDays) * 100
-      : 0;
-
-    res.json({
-      totalShops,
-      totalEmployees,
-      totalPayroll: totalPayroll.length > 0 ? totalPayroll[0].total : 0,
-      averageAttendance
+      message: MSG.SUCCESS || 'Success',
     });
   } catch (error) {
-    console.error('Dashboard stats error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Admin dashboard error:', error);
+    return res.status(STATUS.INTERNAL_SERVER_ERROR).json({ message: MSG.SERVER_ERROR });
   }
 });
 
-// Get client dashboard statistics
-router.get('/client-stats', verifyToken, checkRole(['client']), async (req, res) => {
+// Client (Org Manager) dashboard statistics
+router.get('/client', verifyToken, checkRole(['client']), async (req, res) => {
   try {
-    const shopId = req.query.shopId;
-    if (!shopId) {
-      return res.status(400).json({ error: 'Shop ID is required' });
-    }
+    const totalEmployees = await Employee.countDocuments({});
 
-    // Get total number of employees for this shop
-    const totalEmployees = await Employee.countDocuments({ shop: shopId });
-
-    // Get present employees today
     const { today, tomorrow } = getTodayDateRange();
     const presentToday = await Attendance.countDocuments({
-      shop: shopId,
       date: { $gte: today, $lt: tomorrow },
-      status: 'present'
+      status: 'present',
     });
 
-    // Get pending payroll for current month
     const currentDate = new Date();
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-    const pendingPayroll = await Payroll.aggregate([
-      {
-        $match: {
-          shop: shopId,
-          date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
-          status: 'pending'
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$netSalary' }
-        }
-      }
+    const pendingPayroll = await Payroll.countDocuments({ status: 'pending', date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth } });
+
+    const pendingLeaves = 0; // Placeholder until leave endpoints integrated
+
+    const monthlyExpenseAgg = await Payroll.aggregate([
+      { $match: { date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth } } },
+      { $group: { _id: null, total: { $sum: '$netSalary' } } },
     ]);
+    const monthlyExpense = monthlyExpenseAgg.length > 0 ? monthlyExpenseAgg[0].total : 0;
 
-    // Get total number of shops owned by this client
-    const totalShops = await Shop.countDocuments({ owner: req.userId });
-
-    res.json({
-      totalEmployees,
-      presentToday,
-      pendingPayroll: pendingPayroll.length > 0 ? pendingPayroll[0].total : 0,
-      totalShops
+    return res.status(STATUS.OK).json({
+      data: {
+        totalEmployees,
+        totalContractors: await Employee.countDocuments({ employmentType: 'contract' }),
+        presentToday,
+        pendingPayroll,
+        pendingLeaves,
+        monthlyExpense,
+      },
+      message: MSG.SUCCESS || 'Success',
     });
   } catch (error) {
-    console.error('Client dashboard stats error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Client dashboard error:', error);
+    return res.status(STATUS.INTERNAL_SERVER_ERROR).json({ message: MSG.SERVER_ERROR });
   }
 });
 
-// Get employee dashboard statistics
-router.get('/employee-stats', verifyToken, checkRole(['employee']), async (req, res) => {
+// Employee dashboard statistics
+router.get('/employee', verifyToken, checkRole(['employee']), async (req, res) => {
   try {
-    const employeeId = req.userId;
+    const userId = req.userId;
 
-    // Get attendance stats for current month
+    const employee = await Employee.findOne({ userId }).lean();
+    const employeeId = employee?._id;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const todayAttendance = employeeId
+      ? await Attendance.findOne({ employee: employeeId, date: { $gte: today, $lt: tomorrow } }).lean()
+      : null;
+
     const currentDate = new Date();
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-    const attendanceStats = await Attendance.aggregate([
-      {
-        $match: {
-          employee: employeeId,
-          date: {
-            $gte: firstDayOfMonth,
-            $lte: lastDayOfMonth
-          }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          present: {
-            $sum: {
-              $cond: [{ $eq: ['$status', 'present'] }, 1, 0]
-            }
-          },
-          absent: {
-            $sum: {
-              $cond: [{ $eq: ['$status', 'absent'] }, 1, 0]
-            }
-          },
-          late: {
-            $sum: {
-              $cond: [{ $eq: ['$status', 'late'] }, 1, 0]
-            }
-          }
-        }
-      }
-    ]);
+    const monthlyPayslips = await Payroll.countDocuments({ employee: employeeId, date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth } });
 
-    // Get payslip stats
-    const payslipStats = await Payroll.aggregate([
-      {
-        $match: {
-          employee: employeeId
-        }
+    return res.status(STATUS.OK).json({
+      data: {
+        todayStatus: todayAttendance?.status || 'not_checked',
+        workingHours: todayAttendance?.workingHours || 0,
+        monthlyPayslips,
+        pendingLeaves: 0,
+        totalLeaves: 0,
+        nextPayslip: '',
       },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          pending: {
-            $sum: {
-              $cond: [{ $eq: ['$status', 'pending'] }, 1, 0]
-            }
-          },
-          approved: {
-            $sum: {
-              $cond: [{ $eq: ['$status', 'approved'] }, 1, 0]
-            }
-          }
-        }
-      }
-    ]);
-
-    res.json({
-      attendance: attendanceStats.length > 0 ? attendanceStats[0] : { present: 0, absent: 0, late: 0 },
-      payslips: payslipStats.length > 0 ? payslipStats[0] : { total: 0, pending: 0, approved: 0 }
+      message: MSG.SUCCESS || 'Success',
     });
   } catch (error) {
-    console.error('Employee dashboard stats error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Employee dashboard error:', error);
+    return res.status(STATUS.INTERNAL_SERVER_ERROR).json({ message: MSG.SERVER_ERROR });
   }
 });
 
-module.exports = router; 
+module.exports = router;

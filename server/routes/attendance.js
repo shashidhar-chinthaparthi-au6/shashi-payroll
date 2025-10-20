@@ -3,7 +3,6 @@ const router = express.Router();
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const { verifyToken, checkRole } = require('../middleware/auth');
-const { getTodayDateRange } = require('../utils/dateUtils');
 
 // Helper function to format date
 const formatDate = (date) => {
@@ -50,7 +49,10 @@ router.post('/check-in', verifyToken, async (req, res) => {
     console.log('Check-in request:', { userId });
 
     // Check if already checked in today
-    const { today, tomorrow } = getTodayDateRange();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     console.log('Date range for check-in:', { today, tomorrow });
     
     const existingAttendance = await Attendance.findOne({
@@ -110,7 +112,10 @@ router.post('/qr-check-in', verifyToken, async (req, res) => {
     }
 
     // Check if already checked in today
-    const { today, tomorrow } = getTodayDateRange();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
     const existingAttendance = await Attendance.findOne({
       userId,
@@ -170,7 +175,10 @@ router.post('/check-out', verifyToken, async (req, res) => {
     const { method = 'manual' } = req.body;
     console.log('Check-out request:', { userId, method });
     
-    const { today, tomorrow } = getTodayDateRange();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     console.log('Date range for check-out:', { today, tomorrow });
     
     // Find attendance record using userId
@@ -313,7 +321,10 @@ router.get('/user/:userId', verifyToken, async (req, res) => {
 router.get('/user', verifyToken, checkRole(['employee']), async (req, res) => {
   try {
     const userId = req.userId;
-    const { today, tomorrow } = getTodayDateRange();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     // Get today's attendance
     const todayAttendance = await Attendance.findOne({

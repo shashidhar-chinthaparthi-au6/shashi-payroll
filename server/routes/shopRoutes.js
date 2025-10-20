@@ -3,17 +3,53 @@ const router = express.Router();
 const Shop = require('../models/Shop');
 const { verifyToken, checkRole } = require('../middleware/auth');
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 
 // Create a new shop (admin or client)
 router.post('/', verifyToken, checkRole(['admin', 'client']), async (req, res) => {
   try {
+    // Check if shop name already exists
+    const existingShop = await Shop.findOne({ name: req.body.name });
+    if (existingShop) {
+      return res.status(400).json({ error: 'Shop name already exists' });
+    }
+
+    // Validate role
+    const role = req.body.role?.toLowerCase();
+    if (!role || !['admin', 'client'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role. Must be either "admin" or "client"' });
+    }
+
+    // Create owner user with specified role
+    const defaultPassword = 'admin123'; // You might want to make this configurable
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    
+    const ownerUser = new User({
+      name: req.body.ownerName || `${req.body.name} Owner`,
+      email: req.body.email,
+      password: hashedPassword,
+      role: role
+    });
+    await ownerUser.save();
+
+    // Create shop with owner reference
     const shop = new Shop({
       ...req.body,
-      owner: req.userId
+      owner: ownerUser._id
     });
     await shop.save();
-    res.status(201).json(shop);
+
+    res.status(201).json({
+      message: 'Shop created successfully with owner account',
+      shop,
+      owner: {
+        email: ownerUser.email,
+        password: defaultPassword,
+        role: ownerUser.role
+      }
+    });
   } catch (error) {
+    console.error('Error creating shop:', error);
     res.status(400).json({ error: error.message });
   }
 });

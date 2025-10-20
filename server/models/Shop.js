@@ -4,7 +4,8 @@ const shopSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    unique: true
   },
   address: {
     street: {
@@ -54,7 +55,7 @@ const shopSchema = new mongoose.Schema({
 
 // Index for faster queries
 shopSchema.index({ owner: 1 });
-shopSchema.index({ name: 1 });
+shopSchema.index({ name: 1 }, { unique: true });
 
 const Shop = mongoose.model('Shop', shopSchema);
 

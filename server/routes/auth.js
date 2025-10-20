@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { verifyToken, checkRole } = require('../middleware/auth');
-const responseHandler = require('../utils/responseHandler');
-const statusCodes = require('../utils/statusCodes');
 const Employee = require('../models/Employee');
+const STATUS = require('../utils/constants/statusCodes');
+const MSG = require('../utils/constants/messages');
 
 // Register Admin
 router.post('/register/admin', async (req, res) => {
@@ -15,9 +15,9 @@ router.post('/register/admin', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ name, email, password: hashedPassword, role: 'admin' });
     await user.save();
-    responseHandler.success(res, null, 'Admin registered successfully', statusCodes.CREATED);
+    res.status(STATUS.CREATED).json({ message: MSG.AUTH_REGISTER_SUCCESS });
   } catch (error) {
-    responseHandler.error(res, 'Email already registered', statusCodes.BAD_REQUEST);
+    res.status(STATUS.BAD_REQUEST).json({ error: MSG.AUTH_EMAIL_IN_USE });
   }
 });
 
@@ -28,9 +28,9 @@ router.post('/register/client', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ name, email, password: hashedPassword, role: 'client' });
     await user.save();
-    responseHandler.success(res, null, 'Client registered successfully', statusCodes.CREATED);
+    res.status(STATUS.CREATED).json({ message: MSG.AUTH_REGISTER_SUCCESS });
   } catch (error) {
-    responseHandler.error(res, 'Email already registered', statusCodes.BAD_REQUEST);
+    res.status(STATUS.BAD_REQUEST).json({ error: MSG.AUTH_EMAIL_IN_USE });
   }
 });
 
@@ -59,7 +59,8 @@ router.post('/register/employee', async (req, res) => {
     });
     await employee.save();
 
-    responseHandler.success(res, {
+    res.status(STATUS.CREATED).json({
+      message: MSG.AUTH_REGISTER_SUCCESS,
       user: {
         id: user._id,
         name: user.name,
@@ -74,25 +75,26 @@ router.post('/register/employee', async (req, res) => {
         position: employee.position,
         userId: employee.userId
       }
-    }, 'Employee registered successfully', statusCodes.CREATED);
+    });
   } catch (error) {
-    responseHandler.error(res, 'Email already registered', statusCodes.BAD_REQUEST);
+    res.status(STATUS.BAD_REQUEST).json({ error: MSG.AUTH_EMAIL_IN_USE });
   }
 });
 
 // Login
 router.post('/login', async (req, res) => {
   try {
+    console.log('Login request received');
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    
+    console.log('User found:', user);
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(STATUS.UNAUTHORIZED).json({ message: MSG.AUTH_INVALID_CREDENTIALS });
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(STATUS.UNAUTHORIZED).json({ message: MSG.AUTH_INVALID_CREDENTIALS });
     }
 
     // If user is an employee, find their employee record using userId
@@ -116,9 +118,9 @@ router.post('/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.json({
+    res.status(STATUS.OK).json({
       success: true,
-      message: 'Login successful',
+      message: MSG.AUTH_LOGIN_SUCCESS,
       data: {
         token,
         user: {
@@ -132,7 +134,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: error.message });
+    res.status(STATUS.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 });
 
@@ -145,33 +147,33 @@ router.post('/change-password', verifyToken, async (req, res) => {
     // Validate request body
     if (!currentPassword || !newPassword) {
       console.log('Missing required fields:', { currentPassword: !!currentPassword, newPassword: !!newPassword });
-      return responseHandler.error(res, 'Current password and new password are required', statusCodes.BAD_REQUEST);
+      return res.status(400).json({ error: 'Current password and new password are required' });
     }
 
     // Validate password length
     if (newPassword.length < 6) {
       console.log('Password too short:', newPassword.length);
-      return responseHandler.error(res, 'New password must be at least 6 characters long', statusCodes.BAD_REQUEST);
+      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
     }
 
     const user = await User.findById(req.userId);
     if (!user) {
       console.log('User not found:', req.userId);
-      return responseHandler.error(res, 'User not found', statusCodes.NOT_FOUND);
+      return res.status(404).json({ error: 'User not found' });
     }
 
     try {
       const isValidPassword = await bcrypt.compare(currentPassword, user.password);
       if (!isValidPassword) {
         console.log('Invalid current password for user:', req.userId);
-        return responseHandler.error(res, 'Current password is incorrect', statusCodes.UNAUTHORIZED);
+        return res.status(401).json({ error: 'Current password is incorrect' });
       }
 
       // Check if new password is same as current password
       const isSamePassword = await bcrypt.compare(newPassword, user.password);
       if (isSamePassword) {
         console.log('New password same as current password for user:', req.userId);
-        return responseHandler.error(res, 'New password must be different from current password', statusCodes.BAD_REQUEST);
+        return res.status(400).json({ error: 'New password must be different from current password' });
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -179,20 +181,20 @@ router.post('/change-password', verifyToken, async (req, res) => {
       await user.save();
       console.log('Password changed successfully for user:', req.userId);
 
-      responseHandler.success(res, null, 'Password changed successfully', statusCodes.OK);
+      res.status(200).json({ message: 'Password changed successfully' });
     } catch (bcryptError) {
       console.error('Bcrypt error:', bcryptError);
-      return responseHandler.error(res, 'Error processing password', statusCodes.INTERNAL_SERVER_ERROR);
+      return res.status(500).json({ error: 'Error processing password' });
     }
   } catch (error) {
     console.error('Change password error:', error);
     if (error.name === 'ValidationError') {
-      return responseHandler.error(res, 'Invalid password format', statusCodes.BAD_REQUEST);
+      return res.status(400).json({ error: 'Invalid password format' });
     }
     if (error.name === 'CastError') {
-      return responseHandler.error(res, 'Invalid user ID', statusCodes.BAD_REQUEST);
+      return res.status(400).json({ error: 'Invalid user ID' });
     }
-    return responseHandler.error(res, 'An unexpected error occurred while changing password', statusCodes.INTERNAL_SERVER_ERROR);
+    return res.status(500).json({ error: 'An unexpected error occurred while changing password' });
   }
 });
 

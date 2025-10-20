@@ -1,0 +1,526 @@
+# Payroll System Flow Charts
+
+## System Architecture Flow Chart
+
+```mermaid
+graph TD
+    A[User Login] --> B{Authentication}
+    B -->|Success| C{Check Role}
+    B -->|Failed| D[Login Failed]
+    
+    C -->|Super Admin| E[Super Admin Dashboard]
+    C -->|Org Manager| F[Organization Dashboard]
+    C -->|Employee| G[Employee Dashboard]
+    C -->|Contractor| H[Contractor Dashboard]
+    
+    E --> E1[Organization Management]
+    E --> E2[User Management]
+    E --> E3[Contractor Management]
+    E --> E4[Contract Assignment]
+    E --> E5[Global Analytics]
+    E --> E6[System Settings]
+    
+    F --> F1[Employee Management]
+    F --> F2[Contractor Management]
+    F --> F3[Attendance Management]
+    F --> F4[Payroll Processing]
+    F --> F5[Leave Management]
+    F --> F6[Organization Reports]
+    
+    G --> G1[Mark Attendance]
+    G --> G2[View Payslips]
+    G --> G3[Apply Leave]
+    G --> G4[View Profile]
+    G --> G5[Attendance History]
+    
+    H --> H1[Mark Attendance]
+    H --> H2[View Invoices]
+    H --> H3[Apply Leave]
+    H --> H4[View Profile]
+    H --> H5[Attendance History]
+```
+
+## Organization Management Flow Chart
+
+```mermaid
+graph TD
+    A[Super Admin] --> B[Create Organization]
+    B --> C[Fill Organization Details]
+    C --> D[Set Organization Settings]
+    D --> E[Assign Organization Manager]
+    E --> F[Create Manager Account]
+    F --> G[Send Login Credentials]
+    G --> H[Manager Login]
+    H --> I[Organization Dashboard]
+    
+    I --> J[Employee Management]
+    I --> K[Contractor Management]
+    I --> L[Attendance Management]
+    I --> M[Payroll Processing]
+    I --> N[Leave Management]
+    I --> O[Organization Reports]
+```
+
+## Employee & Contractor Management Flow Chart
+
+```mermaid
+graph TD
+    A[Organization Manager] --> B{Employee Type?}
+    B -->|Regular Employee| C[Add Regular Employee]
+    B -->|Contractor| D[Add Contractor]
+    
+    C --> C1[Fill Employee Details]
+    C1 --> C2[Set Employee Position & Salary]
+    C2 --> C3[Create Employee Account]
+    C3 --> C4[Send Login Credentials]
+    C4 --> C5[Employee Login]
+    C5 --> C6[Employee Dashboard]
+    
+    D --> D1[Fill Contractor Details]
+    D1 --> D2[Set Contractor Rate & Type]
+    D2 --> D3[Create Contractor Account]
+    D3 --> D4[Send Login Credentials]
+    D4 --> D5[Contractor Login]
+    D5 --> D6[Contractor Dashboard]
+    
+    D6 --> D7[Contract Assignment]
+    D7 --> D8[Assign to Organization]
+    D8 --> D9[Set Assignment Period]
+    D9 --> D10[Set Rate & Terms]
+    D10 --> D11[Contract Active]
+```
+
+## Attendance Management Flow Chart (All Types)
+
+```mermaid
+graph TD
+    A[User] --> B{User Type?}
+    B -->|Regular Employee| C[Employee Check-in]
+    B -->|Contractor| D[Contractor Check-in]
+    
+    C --> C1[Record Check-in Time]
+    C1 --> C2[Work Period]
+    C2 --> C3[Employee Check-out]
+    C3 --> C4[Record Check-out Time]
+    C4 --> C5[Update Employee Attendance]
+    C5 --> C6[Manager Review]
+    C6 --> C7[Approve/Reject Attendance]
+    
+    D --> D1[Select Active Contract]
+    D1 --> D2[Record Check-in Time]
+    D2 --> D3[Work Period]
+    D3 --> D4[Contractor Check-out]
+    D4 --> D5[Record Check-out Time]
+    D5 --> D6[Update Contractor Attendance]
+    D6 --> D7[Manager Review]
+    D7 --> D8[Approve/Reject Attendance]
+    D8 --> D9[Update Contract Hours]
+```
+
+## Payroll & Billing Flow Chart
+
+```mermaid
+graph TD
+    A[Organization Manager] --> B{Process Type?}
+    B -->|Regular Payroll| C[Generate Monthly Payroll]
+    B -->|Contractor Billing| D[Generate Contractor Invoice]
+    
+    C --> C1[Calculate Basic Salary]
+    C1 --> C2[Add Allowances]
+    C2 --> C3[Subtract Deductions]
+    C3 --> C4[Calculate Overtime]
+    C4 --> C5[Calculate Net Salary]
+    C5 --> C6[Review Payroll Data]
+    C6 --> C7{Approve Payroll?}
+    C7 -->|Yes| C8[Generate Payslips]
+    C7 -->|No| C9[Modify Payroll]
+    C9 --> C6
+    C8 --> C10[Send Payslips to Employees]
+    
+    D --> D1[Select Contractor]
+    D1 --> D2[Select Assignment Period]
+    D2 --> D3[Calculate Billable Hours]
+    D3 --> D4[Apply Rate & Calculate Amount]
+    D4 --> D5[Review Invoice Data]
+    D5 --> D6{Approve Invoice?}
+    D6 -->|Yes| D7[Generate Invoice]
+    D6 -->|No| D8[Modify Invoice]
+    D8 --> D5
+    D7 --> D9[Send Invoice to Organization]
+    D9 --> D10[Mark as Paid]
+```
+
+## Leave Management Flow Chart (All Types)
+
+```mermaid
+graph TD
+    A[User] --> B{User Type?}
+    B -->|Regular Employee| C[Employee Leave Application]
+    B -->|Contractor| D[Contractor Leave Application]
+    
+    C --> C1[Fill Leave Details]
+    C1 --> C2[Submit Leave Application]
+    C2 --> C3[Manager Review]
+    C3 --> C4{Approve Leave?}
+    C4 -->|Yes| C5[Update Leave Balance]
+    C4 -->|No| C6[Reject Leave]
+    C5 --> C7[Notify Employee]
+    C6 --> C8[Notify Employee with Reason]
+    
+    D --> D1[Fill Leave Details]
+    D1 --> D2[Submit Leave Application]
+    D2 --> D3[Manager Review]
+    D3 --> D4{Approve Leave?}
+    D4 -->|Yes| D5[Update Contract Hours]
+    D4 -->|No| D6[Reject Leave]
+    D5 --> D7[Notify Contractor]
+    D6 --> D8[Notify Contractor with Reason]
+```
+
+## Contractor Assignment Flow Chart
+
+```mermaid
+graph TD
+    A[Super Admin] --> B[Create Contractor]
+    B --> C[Set Contractor Details]
+    C --> D[Create Contractor Account]
+    D --> E[Send Login Credentials]
+    E --> F[Contractor Login]
+    F --> G[Contractor Dashboard]
+    
+    G --> H[Create Contract Assignment]
+    H --> I[Select Organization]
+    I --> J[Set Assignment Period]
+    J --> K[Set Rate & Terms]
+    K --> L[Save Contract Assignment]
+    L --> M[Contract Active]
+    M --> N[Contractor Can Mark Attendance]
+    N --> O[Organization Manager Reviews]
+    O --> P[Generate Invoice]
+    P --> Q[Contractor Views Invoice]
+```
+
+## Reporting Flow Chart (All Roles)
+
+```mermaid
+graph TD
+    A[User] --> B{Check Role}
+    B -->|Super Admin| C[Global Reports]
+    B -->|Org Manager| D[Organization Reports]
+    B -->|Employee| E[Personal Reports]
+    B -->|Contractor| F[Contractor Reports]
+    
+    C --> C1[All Organizations Data]
+    C --> C2[Contractor Utilization]
+    C --> C3[Revenue per Organization]
+    C --> C4[Global Attendance Reports]
+    C --> C5[Global Payroll Reports]
+    C --> C6[Unpaid Invoices]
+    
+    D --> D1[Organization Data]
+    D --> D2[Employee Performance]
+    D --> D3[Contractor Hours & Costs]
+    D --> D4[Attendance Reports]
+    D --> D5[Payroll Reports]
+    D --> D6[Leave Reports]
+    D --> D7[Invoice Status]
+    
+    E --> E1[Personal Attendance]
+    E --> E2[Personal Payslips]
+    E --> E3[Personal Leave History]
+    
+    F --> F1[Contractor Attendance]
+    F --> F2[Contractor Invoices]
+    F --> F3[Contractor Leave History]
+    F --> F4[Assignment History]
+```
+
+## Authentication & Authorization Flow Chart
+
+```mermaid
+graph TD
+    A[User Login] --> B[Validate Credentials]
+    B --> C{Valid Credentials?}
+    C -->|No| D[Login Failed]
+    C -->|Yes| E[Generate JWT Token]
+    E --> F[Check User Role]
+    F --> G{Check Permissions}
+    G -->|Authorized| H[Access Granted]
+    G -->|Unauthorized| I[Access Denied]
+    H --> J[Load Dashboard]
+    J --> K[Filter Data by Role]
+    K --> L[Display User Interface]
+    
+    L --> M{User Type?}
+    M -->|Super Admin| N[Full System Access]
+    M -->|Org Manager| O[Organization Access Only]
+    M -->|Employee| P[Personal Data Only]
+    M -->|Contractor| Q[Contractor Data Only]
+```
+
+## Daily Operations Flow Chart
+
+```mermaid
+graph TD
+    A[Start of Day] --> B[Employee/Contractor Check-in]
+    B --> C[Record Attendance]
+    C --> D[Work Period]
+    D --> E[Employee/Contractor Check-out]
+    E --> F[Update Attendance Record]
+    F --> G[Manager Review]
+    G --> H[Approve Attendance]
+    H --> I[End of Day]
+    
+    I --> J[Weekly Payroll Review]
+    J --> K[Monthly Payroll Generation]
+    K --> L[Payslip Distribution]
+    L --> M[Employee View Payslips]
+    
+    I --> N[Weekly Contractor Review]
+    N --> O[Monthly Contractor Invoicing]
+    O --> P[Invoice Distribution]
+    P --> Q[Contractor View Invoices]
+```
+
+## Mobile App Flow Chart
+
+```mermaid
+graph TD
+    A[Mobile App Login] --> B{Check Role}
+    B -->|Employee| C[Employee Mobile Dashboard]
+    B -->|Contractor| D[Contractor Mobile Dashboard]
+    
+    C --> C1[Mark Attendance]
+    C --> C2[View Payslips]
+    C --> C3[Apply Leave]
+    C --> C4[View Profile]
+    C --> C5[Attendance History]
+    
+    D --> D1[Mark Attendance]
+    D --> D2[View Invoices]
+    D --> D3[Apply Leave]
+    D --> D4[View Profile]
+    D --> D5[Attendance History]
+    
+    C1 --> C1A[Check-in/Check-out]
+    C1A --> C1B[Record Location]
+    C1B --> C1C[Submit Attendance]
+    
+    D1 --> D1A[Select Active Contract]
+    D1A --> D1B[Check-in/Check-out]
+    D1B --> D1C[Record Location]
+    D1C --> D1D[Submit Attendance]
+    
+    C2 --> C2A[View Payslip List]
+    C2A --> C2B[Download PDF]
+    
+    D2 --> D2A[View Invoice List]
+    D2A --> D2B[Download PDF]
+    
+    C3 --> C3A[Fill Leave Form]
+    C3A --> C3B[Submit Leave Application]
+    
+    D3 --> D3A[Fill Leave Form]
+    D3A --> D3B[Submit Leave Application]
+```
+
+## Data Model Relationships
+
+```mermaid
+erDiagram
+    User ||--o{ Organization : manages
+    User ||--o{ Employee : "is employee"
+    User ||--o{ Attendance : "has attendance"
+    User ||--o{ Payslip : "receives payslip"
+    User ||--o{ Leave : "applies leave"
+    User ||--o{ Notification : "receives notification"
+    
+    Organization ||--o{ Employee : "has employees"
+    Organization ||--o{ Attendance : "tracks attendance"
+    Organization ||--o{ Payslip : "generates payslip"
+    Organization ||--o{ Leave : "manages leave"
+    Organization ||--o{ ContractAssignment : "has contracts"
+    
+    Employee ||--o{ Attendance : "records attendance"
+    Employee ||--o{ Payslip : "receives payslip"
+    Employee ||--o{ Leave : "applies leave"
+    Employee ||--o{ LeaveBalance : "has leave balance"
+    
+    ContractAssignment ||--o{ Attendance : "tracks contractor attendance"
+    ContractAssignment ||--o{ ContractorInvoice : "generates invoice"
+    
+    User {
+        ObjectId _id
+        String name
+        String email
+        String password
+        String role
+        Array permissions
+        Boolean isActive
+        Date lastLogin
+        Date createdAt
+        Date updatedAt
+    }
+    
+    Organization {
+        ObjectId _id
+        String name
+        String type
+        ObjectId manager
+        Object settings
+        Object address
+        Object contact
+        Boolean isActive
+        Date createdAt
+        Date updatedAt
+    }
+    
+    Employee {
+        ObjectId _id
+        String employeeId
+        String name
+        String email
+        String phone
+        String position
+        String department
+        Number salary
+        ObjectId organization
+        ObjectId userId
+        ObjectId manager
+        Date hireDate
+        String status
+        String employmentType
+        Object bankDetails
+        Object personalDetails
+        Array documents
+        Date createdAt
+        Date updatedAt
+    }
+    
+    Attendance {
+        ObjectId _id
+        ObjectId employee
+        ObjectId organization
+        Date date
+        Object checkIn
+        Object checkOut
+        String status
+        Number workingHours
+        Number overtimeHours
+        Number breakTime
+        String notes
+        ObjectId approvedBy
+        Date approvedAt
+        Date createdAt
+        Date updatedAt
+    }
+    
+    Payslip {
+        ObjectId _id
+        String payslipId
+        ObjectId employee
+        ObjectId organization
+        Number month
+        Number year
+        Object payPeriod
+        Number basicSalary
+        Array allowances
+        Array deductions
+        Object overtime
+        Number grossSalary
+        Number totalDeductions
+        Number netSalary
+        Object attendance
+        String status
+        Date generatedAt
+        Date approvedAt
+        ObjectId approvedBy
+        Date paidAt
+        String pdfUrl
+        Date createdAt
+        Date updatedAt
+    }
+    
+    Leave {
+        ObjectId _id
+        String leaveId
+        ObjectId employee
+        ObjectId organization
+        String type
+        Date startDate
+        Date endDate
+        Number days
+        String reason
+        String status
+        Date appliedAt
+        Date approvedAt
+        ObjectId approvedBy
+        String rejectionReason
+        Array attachments
+        Date createdAt
+        Date updatedAt
+    }
+    
+    ContractAssignment {
+        ObjectId _id
+        ObjectId contractorEmployee
+        ObjectId organizationId
+        String title
+        Date startDate
+        Date endDate
+        String rateType
+        Number rateAmount
+        String billingCurrency
+        String costCenter
+        String status
+        Date createdAt
+        Date updatedAt
+    }
+    
+    ContractorInvoice {
+        ObjectId _id
+        ObjectId contractorEmployee
+        ObjectId organizationId
+        ObjectId contractAssignmentId
+        Date periodStart
+        Date periodEnd
+        Number billableHours
+        String rateType
+        Number rateAmount
+        Number grossAmount
+        Array deductions
+        Number netAmount
+        String status
+        Date generatedAt
+        Date approvedAt
+        ObjectId approvedBy
+        Date createdAt
+        Date updatedAt
+    }
+```
+
+## Export Instructions
+
+To export these flow charts to images:
+
+1. Install Mermaid CLI:
+```bash
+npm install -g @mermaid-js/mermaid-cli
+```
+
+2. Export to different formats:
+```bash
+# Export to PNG
+mmdc -i docs/flowcharts.mmd -o docs/flowcharts.png
+
+# Export to SVG
+mmdc -i docs/flowcharts.mmd -o docs/flowcharts.svg
+
+# Export to PDF
+mmdc -i docs/flowcharts.mmd -o docs/flowcharts.pdf
+```
+
+3. Or use online Mermaid Live Editor:
+- Go to https://mermaid.live
+- Paste each diagram code
+- Click Export → Choose format

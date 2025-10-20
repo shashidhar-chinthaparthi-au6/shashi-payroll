@@ -6,11 +6,7 @@ const payrollSchema = new mongoose.Schema({
         ref: 'Employee',
         required: true
     },
-    shop: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Shop',
-        required: true
-    },
+    // shop removed for simplified model
     month: {
         type: Number,
         required: true,
