@@ -24,7 +24,11 @@ clientRoutes.use(verifyToken, populateUser, checkRole(['client']));
 // List users (without passwords)
 router.get('/users', async (req, res) => {
   try {
-    const users = await User.find({}).select('-password').sort({ createdAt: -1 }).lean();
+    const users = await User.find({})
+      .select('-password')
+      .populate('organizationId', 'name type')
+      .sort({ createdAt: -1 })
+      .lean();
     return res.status(STATUS.OK).json({ data: users, message: MSG.SUCCESS || 'Success' });
   } catch (error) {
     console.error('Admin list users error:', error);
@@ -35,21 +39,75 @@ router.get('/users', async (req, res) => {
 // Create user
 router.post('/users', async (req, res) => {
   try {
-    const { name, email, password, role } = req.body || {};
+    const { name, email, password, role, organizationId } = req.body || {};
     if (!name || !email || !password || !role) {
       return res.status(STATUS.BAD_REQUEST).json({ message: MSG.BAD_REQUEST || 'Bad request' });
     }
+    
+    // Validate organization assignment based on role
+    if ((role === 'client' || role === 'employee') && !organizationId) {
+      return res.status(STATUS.BAD_REQUEST).json({ 
+        message: 'Organization is required for client and employee roles' 
+      });
+    }
+    
+    // For admin role, organizationId should not be provided (global access)
+    if (role === 'admin' && organizationId) {
+      return res.status(STATUS.BAD_REQUEST).json({ 
+        message: 'Super Admin users have global access and should not be assigned to specific organizations' 
+      });
+    }
+    
+    // For client and employee roles, verify organization exists
+    if (role === 'client' || role === 'employee') {
+      const org = await Organization.findById(organizationId);
+      if (!org) {
+        return res.status(STATUS.BAD_REQUEST).json({ 
+          message: 'Invalid organization selected' 
+        });
+      }
+    }
+    
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(STATUS.BAD_REQUEST).json({ message: MSG.EMAIL_ALREADY_REGISTERED || 'Email already registered' });
     }
+    
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password: hashedPassword, role });
+    const userData = { 
+      name, 
+      email, 
+      password: hashedPassword, 
+      role,
+      ...(organizationId && { organizationId })
+    };
+    
+    const user = new User(userData);
     await user.save();
-    await Activity.create({ actor: req.userId, type: 'user', action: 'create', meta: { userId: user._id, email } });
+    
+    // If creating a client, make them the manager of their organization
+    if (role === 'client' && organizationId) {
+      await Organization.findByIdAndUpdate(organizationId, { manager: user._id });
+    }
+    
+    await Activity.create({ 
+      actor: req.userId, 
+      type: 'user', 
+      action: 'create', 
+      meta: { 
+        userId: user._id, 
+        email, 
+        role,
+        organizationId: organizationId || null
+      } 
+    });
+    
     const safeUser = user.toObject();
     delete safeUser.password;
-    return res.status(STATUS.CREATED).json({ data: safeUser, message: MSG.CLIENT_REGISTERED || 'User created' });
+    return res.status(STATUS.CREATED).json({ 
+      data: safeUser, 
+      message: MSG.CLIENT_REGISTERED || 'User created successfully' 
+    });
   } catch (error) {
     console.error('Admin create user error:', error);
     return res.status(STATUS.INTERNAL_SERVER_ERROR).json({ message: MSG.SERVER_ERROR });
@@ -342,13 +400,69 @@ router.get('/activities', async (req, res) => {
 
 router.post('/organizations', async (req, res) => {
   try {
-    const { name, type, manager, settings, address, contact, isActive } = req.body || {};
+    const { name, type, manager, settings, address, contact, isActive, adminEmail, adminName } = req.body || {};
     if (!name) return res.status(STATUS.BAD_REQUEST).json({ message: MSG.BAD_REQUEST || 'Bad request' });
     const exists = await Organization.findOne({ name });
     if (exists) return res.status(STATUS.BAD_REQUEST).json({ message: 'Organization already exists' });
+    
+    // Create the organization
     const org = await Organization.create({ name, type, manager, settings, address, contact, isActive });
-    await Activity.create({ actor: req.userId, type: 'organization', action: 'create', meta: { orgId: org._id, name } });
-    return res.status(STATUS.CREATED).json({ data: org, message: 'Organization created' });
+    
+    // Create super admin credentials for the organization
+    const adminEmailToUse = adminEmail || `admin@${name.toLowerCase().replace(/\s+/g, '')}.com`;
+    const adminNameToUse = adminName || `${name} Admin`;
+    const defaultPassword = 'Admin@123';
+    
+    // Check if admin user already exists
+    const existingAdmin = await User.findOne({ email: adminEmailToUse });
+    if (existingAdmin) {
+      return res.status(STATUS.BAD_REQUEST).json({ 
+        message: `Admin user with email ${adminEmailToUse} already exists` 
+      });
+    }
+    
+    // Create super admin user for the organization
+    const adminUser = await User.create({
+      name: adminNameToUse,
+      email: adminEmailToUse,
+      password: await bcrypt.hash(defaultPassword, 10),
+      role: 'admin',
+      organizationId: org._id
+    });
+    
+    // Update organization with the admin as manager
+    org.manager = adminUser._id;
+    await org.save();
+    
+    // Create activity log
+    await Activity.create({ 
+      actor: req.userId, 
+      type: 'organization', 
+      action: 'create', 
+      meta: { 
+        orgId: org._id, 
+        name,
+        adminUserId: adminUser._id,
+        adminEmail: adminEmailToUse
+      } 
+    });
+    
+    // Return organization data with admin credentials
+    const safeAdminUser = adminUser.toObject();
+    delete safeAdminUser.password;
+    
+    return res.status(STATUS.CREATED).json({ 
+      data: { 
+        organization: org,
+        adminUser: safeAdminUser,
+        credentials: {
+          email: adminEmailToUse,
+          password: defaultPassword,
+          role: 'admin'
+        }
+      }, 
+      message: 'Organization created with admin credentials' 
+    });
   } catch (error) {
     console.error('Admin create org error:', error);
     return res.status(STATUS.INTERNAL_SERVER_ERROR).json({ message: MSG.SERVER_ERROR });
