@@ -27,7 +27,7 @@ const api = async (endpoint: string, options: ApiOptions = {}) => {
 
   try {
     console.log('Making API request to:', `${API_URL}${endpoint}`);
-    console.log('Request options:', { headers, method: options.method });
+    console.log('Request options:', { headers, method: options.method || 'GET' });
 
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: options.method || 'GET',
