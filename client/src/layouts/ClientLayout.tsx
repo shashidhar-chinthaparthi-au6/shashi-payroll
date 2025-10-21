@@ -17,7 +17,6 @@ import {
   Toolbar,
   Tooltip,
   Typography,
-  Divider,
   Badge,
 } from '@mui/material';
 import {
@@ -33,10 +32,8 @@ import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   Logout as LogoutIcon,
-  Business as BusinessIcon,
   Work as WorkIcon,
   TrendingUp as TrendingUpIcon,
-  Notifications as NotificationsIcon,
 } from '@mui/icons-material';
 import { useAppTheme } from '../contexts/ThemeContext';
 import { useDispatch } from 'react-redux';
@@ -60,7 +57,6 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const { mode, toggleTheme } = useAppTheme();
   const { showToast } = useUI();
   
-  const isDashboard = location.pathname === '/client/dashboard';
 
   const handleToggleTheme = () => {
     const newMode = mode === 'light' ? 'dark' : 'light';

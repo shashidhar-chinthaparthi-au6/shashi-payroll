@@ -17,8 +17,6 @@ import {
   Toolbar,
   Tooltip,
   Typography,
-  Divider,
-  Collapse,
   Badge,
 } from '@mui/material';
 import {
@@ -28,19 +26,13 @@ import {
   Assignment as AssignmentIcon,
   Assessment as AssessmentIcon,
   Settings as SettingsIcon,
-  Notifications as NotificationsIcon,
   AccountCircle as AccountCircleIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
-  ExpandLess,
-  ExpandMore,
   Menu as MenuIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
-  PersonAdd as PersonAddIcon,
-  Group as GroupIcon,
   Work as WorkIcon,
-  TrendingUp as TrendingUpIcon,
   Security as SecurityIcon,
   Monitor as MonitorIcon,
   CheckCircle as CheckCircleIcon,
@@ -73,7 +65,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { mode, toggleTheme } = useAppTheme();
   const { showToast } = useUI();
   
-  const isDashboard = location.pathname === '/admin/dashboard';
 
   const handleToggleTheme = () => {
     const newMode = mode === 'light' ? 'dark' : 'light';
@@ -104,12 +95,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     showToast(`Sidebar ${sidebarCollapsed ? 'expanded' : 'collapsed'}`, 'info');
   };
 
-  const handleSubmenuToggle = (key: string) => {
-    setOpenSubmenus(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
 
   const menuItems = [
     {
