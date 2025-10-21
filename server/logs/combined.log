@@ -713,3 +713,13 @@
 {"level":"error","message":"SyntaxError: Unexpected token '\"', \"\"{\\\"format\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at createStrictSyntaxError (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/types/json.js:169:10)\n    at parse (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/types/json.js:86:15)\n    at /Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/read.js:128:18\n    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)\n    at invokeCallback (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:238:16)\n    at done (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:227:7)\n    at IncomingMessage.onEnd (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:287:7)\n    at IncomingMessage.emit (node:events:524:28)\n    at endReadableNT (node:internal/streams/readable:1698:12)","timestamp":"2025-10-21T04:09:44.042Z"}
 {"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T04:10:43.755Z"}
 {"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T04:10:43.764Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T06:28:24.494Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T06:28:24.504Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T08:34:59.374Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T08:34:59.389Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T08:36:24.276Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T08:36:24.283Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T08:36:29.704Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T08:36:29.710Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T08:38:13.756Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T08:38:13.771Z"}

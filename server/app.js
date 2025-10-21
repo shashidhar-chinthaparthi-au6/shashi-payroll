@@ -4,6 +4,9 @@ const corsMiddleware = require('./middleware/cors');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
 const redisClient = require('./utils/redis');
+
+// Fix Mongoose deprecation warning
+mongoose.set('strictQuery', false);
 const authRoutes = require('./routes/auth');
 const attendanceRoutes = require('./routes/attendance');
 const adminRouter = require('./routes/admin');
