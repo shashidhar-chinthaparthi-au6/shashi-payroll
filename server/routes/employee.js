@@ -9,6 +9,11 @@ const STATUS = require('../utils/constants/statusCodes');
 const MSG = require('../utils/constants/messages');
 const { verifyToken, checkRole, populateUser } = require('../middleware/auth');
 
+// Test route without authentication
+router.get('/test', (req, res) => {
+  res.json({ message: 'Employee routes are working!' });
+});
+
 // All employee routes require employee role
 router.use(verifyToken, populateUser, checkRole(['employee']));
 
