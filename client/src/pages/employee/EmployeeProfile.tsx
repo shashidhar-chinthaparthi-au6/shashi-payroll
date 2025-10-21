@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -72,7 +72,7 @@ interface EmployeeProfile {
   }>;
 }
 
-const EmployeeProfile: React.FC = () => {
+const EmployeeProfileComponent: React.FC = () => {
   const { showLoader, showToast } = useUI();
   const [profile, setProfile] = useState<EmployeeProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,11 +81,7 @@ const EmployeeProfile: React.FC = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       showLoader(true);
       const response = await api('/api/employee/profile');
@@ -96,7 +92,11 @@ const EmployeeProfile: React.FC = () => {
       showLoader(false);
       setLoading(false);
     }
-  };
+  }, [showLoader, showToast]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleEdit = () => {
     if (profile) {
@@ -627,4 +627,4 @@ const EmployeeProfile: React.FC = () => {
   );
 };
 
-export default EmployeeProfile;
+export default EmployeeProfileComponent;

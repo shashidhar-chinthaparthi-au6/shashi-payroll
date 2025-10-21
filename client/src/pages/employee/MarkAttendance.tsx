@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -64,12 +64,7 @@ const MarkAttendance: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [attendanceType, setAttendanceType] = useState('office');
 
-  useEffect(() => {
-    fetchAttendanceStatus();
-    getCurrentLocation();
-  }, []);
-
-  const fetchAttendanceStatus = async () => {
+  const fetchAttendanceStatus = useCallback(async () => {
     try {
       showLoader(true);
       const response = await api('/api/employee/attendance/status');
@@ -87,9 +82,9 @@ const MarkAttendance: React.FC = () => {
       showLoader(false);
       setLoading(false);
     }
-  };
+  }, [showLoader, showToast]);
 
-  const getCurrentLocation = () => {
+  const getCurrentLocation = useCallback(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -103,7 +98,12 @@ const MarkAttendance: React.FC = () => {
         }
       );
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchAttendanceStatus();
+    getCurrentLocation();
+  }, [fetchAttendanceStatus, getCurrentLocation]);
 
   const handleCheckIn = async () => {
     try {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -90,9 +90,9 @@ const ApplyLeave: React.FC = () => {
 
   useEffect(() => {
     fetchLeaveData();
-  }, []);
+  }, [fetchLeaveData]);
 
-  const fetchLeaveData = async () => {
+  const fetchLeaveData = useCallback(async () => {
     try {
       showLoader(true);
       const [balanceRes, applicationsRes] = await Promise.all([
@@ -115,7 +115,7 @@ const ApplyLeave: React.FC = () => {
       showLoader(false);
       setLoading(false);
     }
-  };
+  }, [showLoader, showToast]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
