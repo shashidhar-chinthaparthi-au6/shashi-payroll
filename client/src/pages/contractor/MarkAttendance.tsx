@@ -77,7 +77,7 @@ const MarkAttendance: React.FC = () => {
   useEffect(() => {
     fetchAttendanceStatus();
     getCurrentLocation();
-  }, [fetchAttendanceStatus]);
+  }, [fetchAttendanceStatus, getCurrentLocation]);
 
   const handleCheckIn = async () => {
     try {

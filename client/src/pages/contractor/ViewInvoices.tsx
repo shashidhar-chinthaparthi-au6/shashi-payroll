@@ -14,7 +14,6 @@ import {
   Paper,
   Chip,
   IconButton,
-  useTheme,
   Grid,
   TextField,
   InputAdornment
