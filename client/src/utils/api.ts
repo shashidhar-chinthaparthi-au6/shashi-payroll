@@ -30,6 +30,7 @@ const api = async (endpoint: string, options: ApiOptions = {}) => {
     console.log('Request options:', { headers, method: options.method });
 
     const response = await fetch(`${API_URL}${endpoint}`, {
+      method: options.method || 'GET',
       ...options,
       headers,
       body: options.body ? JSON.stringify(options.body) : undefined,
