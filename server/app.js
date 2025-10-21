@@ -28,24 +28,45 @@ app.get('/health', (req, res) => {
     message: 'OK',
     timestamp: Date.now(),
     mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    redis: redisClient.connected ? 'connected' : 'disconnected'
+    redis: redisClient.connected || redisClient.ready ? 'connected' : 'disconnected',
+    status: 'healthy'
   };
   res.json(health);
 });
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Payroll API Server',
+    status: 'running',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Connect to MongoDB with better error handling
+const connectToMongoDB = async () => {
+  try {
+    await mongoose.connect(config[process.env.NODE_ENV || 'development'].mongodb.uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      family: 4,
+      maxPoolSize: 10,
+      retryWrites: true,
+      w: 'majority'
+    });
+    logger.info('Connected to MongoDB');
+  } catch (err) {
+    logger.error('MongoDB connection error:', err.message);
+    // Don't crash the app if MongoDB fails
+    console.log('Server will continue without MongoDB connection');
+  }
+};
+
 // Connect to MongoDB
-mongoose.connect(config[process.env.NODE_ENV || 'development'].mongodb.uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-  family: 4,
-  maxPoolSize: 10,
-  retryWrites: true,
-  w: 'majority'
-})
-  .then(() => logger.info('Connected to MongoDB'))
-  .catch(err => logger.error('MongoDB connection error:', err));
+connectToMongoDB();
 
 // Routes
 app.use('/api/auth', authRoutes);
