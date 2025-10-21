@@ -60,6 +60,7 @@ app.use('/api/leave', require('./routes/leave'));
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRouter);
 app.use('/api/client', clientRoutes);
+app.use('/api/employee', require('./routes/employee'));
 
 // Error handling middleware
 app.use(errorHandler);

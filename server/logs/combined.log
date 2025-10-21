@@ -444,3 +444,126 @@
 {"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-20T20:07:46.937Z"}
 {"level":"info","message":"Server running on port 5000","timestamp":"2025-10-20T20:11:03.356Z"}
 {"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-20T20:11:03.464Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-20T20:16:55.860Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-20T20:16:55.903Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-20T20:17:07.811Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-20T20:17:07.835Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:16:47.419Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:16:47.458Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:17:41.686Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:17:41.693Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:30:28.957Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:30:28.967Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:32:33.266Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:32:33.276Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:33:13.112Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:33:13.197Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:33:23.818Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:33:23.914Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:33:37.862Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:33:37.955Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:33:43.157Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:33:43.238Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:33:50.415Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:33:50.501Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:33:57.936Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:33:58.007Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:34:07.769Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:34:07.822Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:34:12.536Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:34:12.675Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:34:22.824Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:34:22.856Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:34:37.884Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:34:37.893Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:34:46.661Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:34:46.724Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:38:35.442Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:38:35.478Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:38:46.176Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:38:46.183Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:42:18.420Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:42:18.549Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:42:27.283Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:42:27.292Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:42:42.506Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:42:42.660Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:42:50.299Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:42:50.349Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:44:34.171Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:44:34.290Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:44:58.253Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:44:58.260Z"}
+{"level":"error","message":"SyntaxError: Unexpected token '\"', \"\"{\\\"type\\\"\"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at createStrictSyntaxError (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/types/json.js:169:10)\n    at parse (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/types/json.js:86:15)\n    at /Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/read.js:128:18\n    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)\n    at invokeCallback (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:238:16)\n    at done (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:227:7)\n    at IncomingMessage.onEnd (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:287:7)\n    at IncomingMessage.emit (node:events:524:28)\n    at endReadableNT (node:internal/streams/readable:1698:12)","timestamp":"2025-10-21T00:46:15.596Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:46:46.499Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:46:46.507Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:47:43.549Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:47:43.609Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:47:52.617Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:47:52.625Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:48:33.115Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:48:33.222Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:48:42.151Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:48:42.159Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:49:01.945Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:49:02.090Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:49:04.998Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:49:05.131Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:49:13.588Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:49:13.596Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:49:53.533Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:49:53.635Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:49:57.363Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:49:57.507Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:50:02.412Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:50:02.509Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:50:33.245Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:50:33.252Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:53:34.575Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:53:34.640Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:53:36.925Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:53:36.985Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:54:16.019Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:54:16.081Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:58:12.871Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:58:12.879Z"}
+{"level":"error","message":"SyntaxError: \"[object Object]\" is not valid JSON\n    at JSON.parse (<anonymous>)\n    at parse (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/types/json.js:92:19)\n    at /Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/read.js:128:18\n    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)\n    at invokeCallback (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:238:16)\n    at done (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:227:7)\n    at IncomingMessage.onEnd (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:287:7)\n    at IncomingMessage.emit (node:events:524:28)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)","timestamp":"2025-10-21T00:58:43.642Z"}
+{"level":"error","message":"SyntaxError: \"[object Object]\" is not valid JSON\n    at JSON.parse (<anonymous>)\n    at parse (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/types/json.js:92:19)\n    at /Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/read.js:128:18\n    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)\n    at invokeCallback (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:238:16)\n    at done (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:227:7)\n    at IncomingMessage.onEnd (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:287:7)\n    at IncomingMessage.emit (node:events:524:28)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)","timestamp":"2025-10-21T00:58:50.636Z"}
+{"level":"error","message":"SyntaxError: \"[object Object]\" is not valid JSON\n    at JSON.parse (<anonymous>)\n    at parse (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/types/json.js:92:19)\n    at /Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/read.js:128:18\n    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)\n    at invokeCallback (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:238:16)\n    at done (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:227:7)\n    at IncomingMessage.onEnd (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:287:7)\n    at IncomingMessage.emit (node:events:524:28)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)","timestamp":"2025-10-21T00:58:57.748Z"}
+{"level":"error","message":"SyntaxError: \"[object Object]\" is not valid JSON\n    at JSON.parse (<anonymous>)\n    at parse (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/types/json.js:92:19)\n    at /Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/read.js:128:18\n    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)\n    at invokeCallback (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:238:16)\n    at done (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:227:7)\n    at IncomingMessage.onEnd (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:287:7)\n    at IncomingMessage.emit (node:events:524:28)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)","timestamp":"2025-10-21T00:59:05.596Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:59:25.248Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:59:25.254Z"}
+{"level":"error","message":"SyntaxError: \"[object Object]\" is not valid JSON\n    at JSON.parse (<anonymous>)\n    at parse (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/types/json.js:92:19)\n    at /Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/read.js:128:18\n    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)\n    at invokeCallback (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:238:16)\n    at done (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:227:7)\n    at IncomingMessage.onEnd (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:287:7)\n    at IncomingMessage.emit (node:events:524:28)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)","timestamp":"2025-10-21T00:59:32.474Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T00:59:54.084Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T00:59:54.091Z"}
+{"level":"error","message":"SyntaxError: \"[object Object]\" is not valid JSON\n    at JSON.parse (<anonymous>)\n    at parse (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/types/json.js:92:19)\n    at /Users/shashi/Desktop/my-projects/payroll/server/node_modules/body-parser/lib/read.js:128:18\n    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)\n    at invokeCallback (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:238:16)\n    at done (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:227:7)\n    at IncomingMessage.onEnd (/Users/shashi/Desktop/my-projects/payroll/server/node_modules/raw-body/index.js:287:7)\n    at IncomingMessage.emit (node:events:524:28)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)","timestamp":"2025-10-21T01:00:02.815Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:01:42.945Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:01:42.951Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:02:50.554Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:02:50.560Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:03:31.080Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:03:31.090Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:03:50.076Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:03:50.226Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:03:58.880Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:03:58.887Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:04:04.876Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:04:04.967Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:04:33.311Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:04:33.318Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:05:31.204Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:05:31.375Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:05:35.593Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:05:35.707Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:05:42.962Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:05:43.064Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:05:58.493Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:05:58.500Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:06:11.152Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:06:11.255Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:06:34.527Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:06:34.534Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:07:31.698Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:07:31.838Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-10-21T01:07:52.714Z"}
+{"level":"info","message":"Connected to MongoDB","timestamp":"2025-10-21T01:07:52.721Z"}
