@@ -88,10 +88,6 @@ const ApplyLeave: React.FC = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    fetchLeaveData();
-  }, [fetchLeaveData]);
-
   const fetchLeaveData = useCallback(async () => {
     try {
       showLoader(true);
@@ -116,6 +112,10 @@ const ApplyLeave: React.FC = () => {
       setLoading(false);
     }
   }, [showLoader, showToast]);
+
+  useEffect(() => {
+    fetchLeaveData();
+  }, [fetchLeaveData]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
