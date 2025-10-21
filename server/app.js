@@ -39,8 +39,9 @@ app.get('/', (req, res) => {
   res.json({
     message: 'Payroll API Server',
     status: 'running',
-    version: '1.0.0',
-    timestamp: new Date().toISOString()
+    version: '1.0.1',
+    timestamp: new Date().toISOString(),
+    routes: ['/api/auth', '/api/employee', '/api/client', '/api/contractor', '/api/admin']
   });
 });
 
