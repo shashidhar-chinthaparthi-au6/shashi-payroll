@@ -17,6 +17,44 @@ const { verifyToken, checkRole, populateUser } = require('../middleware/auth');
 // All admin routes require admin role
 router.use(verifyToken, checkRole(['admin']));
 
+// Dashboard data endpoint
+router.get('/dashboard', async (req, res) => {
+  try {
+    const [
+      totalOrganizations,
+      totalUsers,
+      totalContractors,
+      activeContracts,
+      pendingApprovals,
+      systemHealth
+    ] = await Promise.all([
+      Organization.countDocuments(),
+      User.countDocuments(),
+      Employee.countDocuments(),
+      ContractAssignment.countDocuments({ status: 'active' }),
+      Leave.countDocuments({ status: 'pending' }),
+      SystemSettings.findOne({ key: 'system_health' })
+    ]);
+
+    const dashboardData = {
+      totalOrganizations,
+      totalUsers,
+      totalContractors,
+      activeContracts,
+      pendingApprovals,
+      systemHealth: systemHealth?.value || 100
+    };
+
+    return res.status(STATUS.OK).json({ 
+      data: dashboardData, 
+      message: MSG.SUCCESS || 'Success' 
+    });
+  } catch (error) {
+    console.error('Admin dashboard error:', error);
+    return res.status(STATUS.INTERNAL_SERVER_ERROR).json({ message: MSG.SERVER_ERROR });
+  }
+});
+
 // Organization Manager routes (client role)
 const clientRoutes = express.Router();
 clientRoutes.use(verifyToken, populateUser, checkRole(['client']));

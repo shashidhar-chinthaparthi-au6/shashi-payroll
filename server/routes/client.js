@@ -15,6 +15,51 @@ const { verifyToken, checkRole, populateUser } = require('../middleware/auth');
 // All client routes require client role
 router.use(verifyToken, populateUser, checkRole(['client']));
 
+// Get client dashboard data
+router.get('/dashboard', async (req, res) => {
+  try {
+    const organizationId = req.user.organizationId;
+    
+    // Get organization statistics
+    const [
+      totalEmployees,
+      totalContractors,
+      presentToday,
+      pendingLeaves,
+      totalPayslips
+    ] = await Promise.all([
+      Employee.countDocuments({ organizationId }),
+      Employee.countDocuments({ organizationId, type: 'contractor' }),
+      Attendance.countDocuments({ 
+        date: { 
+          $gte: new Date(new Date().setHours(0,0,0,0)),
+          $lt: new Date(new Date().setHours(23,59,59,999))
+        },
+        checkIn: { $exists: true }
+      }),
+      Leave.countDocuments({ status: 'pending' }),
+      Payslip.countDocuments()
+    ]);
+
+    const dashboardData = {
+      totalEmployees,
+      totalContractors,
+      presentToday,
+      pendingLeaves,
+      totalPayslips,
+      attendanceRate: totalEmployees > 0 ? Math.round((presentToday / totalEmployees) * 100) : 0
+    };
+
+    return res.status(STATUS.OK).json({ 
+      data: dashboardData, 
+      message: MSG.SUCCESS || 'Success' 
+    });
+  } catch (error) {
+    console.error('Client dashboard error:', error);
+    return res.status(STATUS.INTERNAL_SERVER_ERROR).json({ message: MSG.SERVER_ERROR });
+  }
+});
+
 // Get organization activities
 router.get('/activities', async (req, res) => {
   try {

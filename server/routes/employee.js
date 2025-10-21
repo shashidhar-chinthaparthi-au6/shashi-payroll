@@ -12,6 +12,54 @@ const { verifyToken, checkRole, populateUser } = require('../middleware/auth');
 // All employee routes require employee role
 router.use(verifyToken, populateUser, checkRole(['employee']));
 
+// Get employee dashboard data
+router.get('/dashboard', async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ userId: req.userId });
+    if (!employee) {
+      return res.status(STATUS.NOT_FOUND).json({ message: MSG.NOT_FOUND || 'Employee not found' });
+    }
+
+    // Get today's attendance
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setDate(endOfDay.getDate() + 1);
+
+    const todayAttendance = await Attendance.findOne({
+      userId: req.userId,
+      date: { $gte: startOfDay, $lt: endOfDay }
+    });
+
+    // Get pending leaves
+    const pendingLeaves = await Leave.countDocuments({
+      userId: req.userId,
+      status: 'pending'
+    });
+
+    // Get recent payslips
+    const recentPayslips = await Payslip.countDocuments({
+      employeeId: employee._id
+    });
+
+    const dashboardData = {
+      attendanceStatus: todayAttendance ? (todayAttendance.checkOut ? 'completed' : 'checked-in') : 'not-checked',
+      pendingLeaves,
+      totalPayslips: recentPayslips,
+      todayHours: todayAttendance ? (todayAttendance.checkOut ? 
+        Math.round((new Date(todayAttendance.checkOut) - new Date(todayAttendance.checkIn)) / (1000 * 60 * 60) * 10) / 10 : 0) : 0
+    };
+
+    return res.status(STATUS.OK).json({ 
+      data: dashboardData, 
+      message: MSG.SUCCESS || 'Success' 
+    });
+  } catch (error) {
+    console.error('Employee dashboard error:', error);
+    return res.status(STATUS.INTERNAL_SERVER_ERROR).json({ message: MSG.SERVER_ERROR });
+  }
+});
+
 // Get employee profile
 router.get('/profile', async (req, res) => {
   try {
