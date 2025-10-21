@@ -8,10 +8,6 @@ import {
   TextField,
   Grid,
   Chip,
-  Avatar,
-  useTheme,
-  Alert,
-  Paper
 } from '@mui/material';
 import {
   AccessTime as AccessTimeIcon,
@@ -22,7 +18,6 @@ import {
 import { useUI } from '../../contexts/ThemeContext';
 import api from '../../utils/api';
 import STATUS from '../../constants/statusCodes';
-import MSG from '../../constants/messages';
 
 interface AttendanceStatus {
   isCheckedIn: boolean;
@@ -36,7 +31,6 @@ interface AttendanceStatus {
 }
 
 const MarkAttendance: React.FC = () => {
-  const theme = useTheme();
   const { showLoader, showToast } = useUI();
   
   const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus>({

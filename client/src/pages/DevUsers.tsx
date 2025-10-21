@@ -32,8 +32,6 @@ import {
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
   Refresh as RefreshIcon,
   ContentCopy,
   Login as LoginIcon,
@@ -95,7 +93,6 @@ const DevUsers: React.FC = () => {
     position: '',
   });
 
-  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; userId: string | null }>({
     open: false,
     userId: null,
@@ -292,12 +289,6 @@ const DevUsers: React.FC = () => {
     }
   };
 
-  const togglePasswordVisibility = (userId: string) => {
-    setShowPasswords(prev => ({
-      ...prev,
-      [userId]: !prev[userId],
-    }));
-  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
