@@ -9,6 +9,7 @@ import {
   Grid,
   Avatar,
   useTheme,
+  Chip,
 } from '@mui/material';
 import {
   Edit as EditIcon,

@@ -8,7 +8,6 @@ import {
   Avatar, 
   Menu, 
   MenuItem, 
-  useTheme,
   CssBaseline,
   Drawer,
   List,
@@ -48,7 +47,7 @@ const collapsedDrawerWidth = 64;
 const ContractorLayout: React.FC<ContractorLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toggleTheme } = useAppTheme();
+  const { mode, toggleTheme } = useAppTheme();
   const { showToast } = useUI();
   
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
