@@ -28,7 +28,6 @@ import {
 import { useUI } from '../../contexts/ThemeContext';
 import api from '../../utils/api';
 import STATUS from '../../constants/statusCodes';
-import MSG from '../../constants/messages';
 
 interface Invoice {
   _id: string;
@@ -51,24 +50,20 @@ interface Invoice {
 }
 
 const ViewInvoices: React.FC = () => {
-  const theme = useTheme();
   const { showLoader, showToast } = useUI();
   
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   const fetchInvoices = useCallback(async () => {
     try {
-      setLoading(true);
       showLoader(true);
       const response = await api('/api/contractor/invoices');
       setInvoices(response?.data || []);
     } catch (e: any) {
       showToast(e.message || 'Failed to load invoices', 'error');
     } finally {
-      setLoading(false);
       showLoader(false);
     }
   }, [showLoader, showToast]);
