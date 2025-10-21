@@ -60,6 +60,12 @@ const authSlice = createSlice({
       state.error = null;
     },
     loginSuccess: (state, action: PayloadAction<{ user: User; token: string }>) => {
+      console.log('🎉 Login Success - Storing token:', {
+        hasToken: !!action.payload.token,
+        tokenLength: action.payload.token?.length || 0,
+        user: action.payload.user
+      });
+      
       state.loading = false;
       state.isAuthenticated = true;
       state.user = action.payload.user;
@@ -71,6 +77,12 @@ const authSlice = createSlice({
       localStorage.setItem('token', action.payload.token);
       localStorage.setItem('user', JSON.stringify(action.payload.user));
       localStorage.setItem('tokenExpiry', expiryTime.toString());
+      
+      console.log('✅ Token stored in localStorage:', {
+        token: localStorage.getItem('token')?.substring(0, 50) + '...',
+        user: localStorage.getItem('user'),
+        expiry: localStorage.getItem('tokenExpiry')
+      });
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;

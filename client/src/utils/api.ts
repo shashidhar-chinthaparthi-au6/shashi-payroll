@@ -12,8 +12,18 @@ const api = async (endpoint: string, options: ApiOptions = {}) => {
   const token = localStorage.getItem('token');
   const tokenExpiry = localStorage.getItem('tokenExpiry');
   
+  // Debug logging
+  console.log('🔍 API Debug:', {
+    endpoint,
+    hasToken: !!token,
+    tokenLength: token?.length || 0,
+    tokenExpiry,
+    isExpired: tokenExpiry && parseInt(tokenExpiry) < Date.now()
+  });
+  
   // Check if token is expired
   if (tokenExpiry && parseInt(tokenExpiry) < Date.now()) {
+    console.log('❌ Token expired, redirecting to login');
     store.dispatch(logout());
     window.location.href = '/login';
     throw new Error('Session expired. Please login again.');
