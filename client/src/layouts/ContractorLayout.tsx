@@ -16,7 +16,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Divider,
   Badge,
   Tooltip,
 } from '@mui/material';
@@ -25,15 +24,12 @@ import {
   Assignment as AssignmentIcon,
   Assessment as AssessmentIcon,
   Settings as SettingsIcon,
-  AccountCircle as AccountCircleIcon,
   Brightness4 as Brightness4Icon, 
   Brightness7 as Brightness7Icon,
   Menu as MenuIcon,
-  Work as WorkIcon,
   Payment as PaymentIcon,
   History as HistoryIcon,
   Person as PersonIcon,
-  Notifications as NotificationsIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   Logout as LogoutIcon,
@@ -50,10 +46,9 @@ const drawerWidth = 280;
 const collapsedDrawerWidth = 64;
 
 const ContractorLayout: React.FC<ContractorLayoutProps> = ({ children }) => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { mode, toggleTheme } = useAppTheme();
+  const { toggleTheme } = useAppTheme();
   const { showToast } = useUI();
   
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

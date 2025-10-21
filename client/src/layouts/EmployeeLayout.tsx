@@ -17,23 +17,18 @@ import {
   Toolbar,
   Tooltip,
   Typography,
-  Divider,
   Badge,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
   Schedule as ScheduleIcon,
   Assignment as AssignmentIcon,
-  Assessment as AssessmentIcon,
   Settings as SettingsIcon,
   AccountCircle as AccountCircleIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
   Menu as MenuIcon,
   Person as PersonIcon,
-  Work as WorkIcon,
-  TrendingUp as TrendingUpIcon,
-  Notifications as NotificationsIcon,
   Payment as PaymentIcon,
   History as HistoryIcon,
   ChevronLeft as ChevronLeftIcon,
@@ -62,7 +57,6 @@ const EmployeeLayout: React.FC<EmployeeLayoutProps> = ({ children }) => {
   const { mode, toggleTheme } = useAppTheme();
   const { showToast } = useUI();
   
-  const isDashboard = location.pathname === '/employee/dashboard';
 
   const handleToggleTheme = () => {
     const newMode = mode === 'light' ? 'dark' : 'light';

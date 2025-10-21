@@ -58,7 +58,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [openSubmenus, setOpenSubmenus] = useState<{ [key: string]: boolean }>({});
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
