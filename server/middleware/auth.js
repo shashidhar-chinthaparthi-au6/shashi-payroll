@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const config = require('../config/config');
 
 // Middleware to verify JWT token
 exports.verifyToken = (req, res, next) => {
@@ -10,7 +11,8 @@ exports.verifyToken = (req, res, next) => {
   }
   
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'test-secret');
+    const jwtSecret = config[process.env.NODE_ENV || 'development'].jwt.secret;
+    const decoded = jwt.verify(token, jwtSecret);
     req.userId = decoded.id;
     req.userRole = decoded.role; // Add role to request object
     next();

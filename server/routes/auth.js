@@ -7,6 +7,7 @@ const { verifyToken, checkRole } = require('../middleware/auth');
 const Employee = require('../models/Employee');
 const STATUS = require('../utils/constants/statusCodes');
 const MSG = require('../utils/constants/messages');
+const config = require('../config/config');
 
 // Register Admin
 router.post('/register/admin', async (req, res) => {
@@ -112,9 +113,10 @@ router.post('/login', async (req, res) => {
       }
     }
 
+    const jwtSecret = config[process.env.NODE_ENV || 'development'].jwt.secret;
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
+      jwtSecret,
       { expiresIn: '1h' }
     );
 
