@@ -10,12 +10,23 @@ const corsOptions = {
       'http://localhost:3000',
       'http://127.0.0.1:3000',
       'http://localhost:3001',
-      'http://127.0.0.1:3001'
+      'http://127.0.0.1:3001',
+      'https://csspnexus-payroll.netlify.app'
     ];
     
+    // Check if origin is in allowed list
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
-    } else {
+    } 
+    // Allow all Netlify domains
+    else if (origin && origin.includes('.netlify.app')) {
+      callback(null, true);
+    }
+    // Allow all Vercel domains
+    else if (origin && origin.includes('.vercel.app')) {
+      callback(null, true);
+    }
+    else {
       callback(new Error('Not allowed by CORS'));
     }
   },
