@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
-  Paper,
   TextField,
   Button,
   Typography,
@@ -28,12 +27,6 @@ import {
   Email as EmailIcon,
   Lock as LockIcon,
   Person as PersonIcon,
-  Business as BusinessIcon,
-  People as PeopleIcon,
-  Work as WorkIcon,
-  TrendingUp as TrendingUpIcon,
-  Security as SecurityIcon,
-  Speed as SpeedIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { API_URL } from '../config';

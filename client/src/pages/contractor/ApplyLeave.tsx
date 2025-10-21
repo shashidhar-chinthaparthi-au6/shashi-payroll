@@ -20,7 +20,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Alert
 } from '@mui/material';
 import {
   Event as EventIcon,
@@ -31,7 +30,6 @@ import {
 import { useUI } from '../../contexts/ThemeContext';
 import api from '../../utils/api';
 import STATUS from '../../constants/statusCodes';
-import MSG from '../../constants/messages';
 
 interface LeaveBalance {
   total: number;
@@ -53,7 +51,6 @@ interface LeaveApplication {
 }
 
 const ApplyLeave: React.FC = () => {
-  const theme = useTheme();
   const { showLoader, showToast } = useUI();
   
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalance>({

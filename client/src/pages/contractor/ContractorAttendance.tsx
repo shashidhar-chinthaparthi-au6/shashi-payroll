@@ -25,14 +25,12 @@ import {
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  FilterList as FilterIcon,
   Download as DownloadIcon,
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { useUI } from '../../contexts/ThemeContext';
 import api from '../../utils/api';
 import STATUS from '../../constants/statusCodes';
-import MSG from '../../constants/messages';
 
 interface AttendanceRecord {
   _id: string;
@@ -54,11 +52,9 @@ interface AttendanceRecord {
 }
 
 const ContractorAttendance: React.FC = () => {
-  const theme = useTheme();
   const { showLoader, showToast } = useUI();
   
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
@@ -68,7 +64,6 @@ const ContractorAttendance: React.FC = () => {
 
   const fetchAttendance = useCallback(async (page = 1) => {
     try {
-      setLoading(true);
       showLoader(true);
       
       const params = new URLSearchParams({
@@ -90,7 +85,6 @@ const ContractorAttendance: React.FC = () => {
     } catch (e: any) {
       showToast(e.message || 'Failed to load attendance', 'error');
     } finally {
-      setLoading(false);
       showLoader(false);
     }
   }, [searchTerm, statusFilter, dateFilter, showLoader, showToast]);
