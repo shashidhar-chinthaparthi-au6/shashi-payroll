@@ -61,6 +61,9 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRouter);
 app.use('/api/client', clientRoutes);
 app.use('/api/employee', require('./routes/employee'));
+app.use('/api/contractor', require('./routes/contractor'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/pdf', require('./routes/pdf'));
 
 // Error handling middleware
 app.use(errorHandler);

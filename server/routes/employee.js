@@ -72,8 +72,9 @@ router.get('/attendance/status', async (req, res) => {
       return res.status(STATUS.NOT_FOUND).json({ message: MSG.NOT_FOUND || 'Employee not found' });
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Get today's date range in local timezone
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -95,6 +96,9 @@ router.get('/attendance/status', async (req, res) => {
       } else {
         currentStatus = 'absent';
       }
+    } else {
+      // No attendance record for today - should show as not_checked
+      currentStatus = 'not_checked';
     }
 
     // Calculate working hours
@@ -136,8 +140,9 @@ router.post('/attendance/checkin', async (req, res) => {
       return res.status(STATUS.NOT_FOUND).json({ message: MSG.NOT_FOUND || 'Employee not found' });
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Get today's date range in local timezone
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -209,8 +214,9 @@ router.post('/attendance/checkout', async (req, res) => {
       return res.status(STATUS.NOT_FOUND).json({ message: MSG.NOT_FOUND || 'Employee not found' });
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Get today's date range in local timezone
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 

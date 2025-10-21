@@ -187,9 +187,32 @@ router.post('/contractors', async (req, res) => {
     if (!name || !email) return res.status(STATUS.BAD_REQUEST).json({ message: MSG.BAD_REQUEST || 'Bad request' });
     const exists = await User.findOne({ email });
     if (exists) return res.status(STATUS.BAD_REQUEST).json({ message: MSG.EMAIL_ALREADY_REGISTERED || 'Email already registered' });
+    
+    // Get the first available organization for admin-created contractors
+    const defaultOrg = await Organization.findOne({});
+    if (!defaultOrg) {
+      return res.status(STATUS.INTERNAL_SERVER_ERROR).json({ message: 'No organization found. Please create an organization first.' });
+    }
+    
     const defaultPassword = 'Contract@123';
-    const user = await User.create({ name, email, password: await bcrypt.hash(defaultPassword, 10), role: 'employee' });
-    const emp = await Employee.create({ name, email, phone, position, department, userId: user._id, status: 'active', employmentType: 'contract' });
+    const user = await User.create({ 
+      name, 
+      email, 
+      password: await bcrypt.hash(defaultPassword, 10), 
+      role: 'employee',
+      organizationId: defaultOrg._id
+    });
+    const emp = await Employee.create({ 
+      name, 
+      email, 
+      phone, 
+      position, 
+      department, 
+      userId: user._id, 
+      status: 'active', 
+      employmentType: 'contract',
+      organizationId: defaultOrg._id
+    });
     const safeUser = user.toObject(); delete safeUser.password;
     await Activity.create({ actor: req.userId, type: 'contractor', action: 'create', meta: { employeeId: emp._id } });
     return res.status(STATUS.CREATED).json({ data: { user: safeUser, employee: emp }, message: 'Contractor created' });
