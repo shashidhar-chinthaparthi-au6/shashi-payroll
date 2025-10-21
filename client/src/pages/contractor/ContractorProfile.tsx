@@ -9,12 +9,8 @@ import {
   Grid,
   Avatar,
   useTheme,
-  Divider,
-  Chip,
-  Alert
 } from '@mui/material';
 import {
-  Person as PersonIcon,
   Edit as EditIcon,
   Save as SaveIcon,
   Cancel as CancelIcon
@@ -22,7 +18,6 @@ import {
 import { useUI } from '../../contexts/ThemeContext';
 import api from '../../utils/api';
 import STATUS from '../../constants/statusCodes';
-import MSG from '../../constants/messages';
 
 interface ContractorProfile {
   _id: string;
@@ -53,8 +48,7 @@ interface ContractorProfile {
   createdAt: string;
 }
 
-const ContractorProfile: React.FC = () => {
-  const theme = useTheme();
+const ContractorProfileComponent: React.FC = () => {
   const { showLoader, showToast } = useUI();
   
   const [profile, setProfile] = useState<ContractorProfile | null>(null);
@@ -465,4 +459,4 @@ const ContractorProfile: React.FC = () => {
   );
 };
 
-export default ContractorProfile;
+export default ContractorProfileComponent;
