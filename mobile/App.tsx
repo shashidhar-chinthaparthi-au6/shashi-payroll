@@ -1,32 +1,31 @@
 import React, { useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { store } from './src/store';
-import Navigation from './src/navigation';
+import AppNavigator from './src/navigation';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initializeAuth } from './src/store/slices/authSlice';
-import { PaperProvider } from 'react-native-paper';
-import { AuthProvider } from './src/contexts/AuthContext';
+import { ThemeProvider } from './src/contexts/ThemeContext';
+import { setupNetworkMonitoring } from './src/utils/networkLogger';
 
 const AppContent = () => {
   useEffect(() => {
     store.dispatch(initializeAuth());
+    setupNetworkMonitoring();
   }, []);
 
   return (
-    <PaperProvider>
-      <SafeAreaProvider>
-        <Navigation />
-      </SafeAreaProvider>
-    </PaperProvider>
+    <SafeAreaProvider>
+      <AppNavigator />
+    </SafeAreaProvider>
   );
 };
 
 export default function App() {
   return (
     <Provider store={store}>
-      <AuthProvider>
+      <ThemeProvider>
         <AppContent />
-      </AuthProvider>
+      </ThemeProvider>
     </Provider>
   );
 } 
